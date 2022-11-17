@@ -1,0 +1,278 @@
+---
+title: "PCAplots"
+author: "Lauren E Johnson"
+date: "11/29/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Load the data:
+```{r message=FALSE}
+load(here::here('data/whole_brain_coords_S1.Rda'))
+load(here::here('data/tel_coords_S1.Rda'))
+load(here::here('data/dien_coords_S1.Rda'))
+load(here::here('data/mes_coords_S1.Rda'))
+load(here::here('data/cere_coords_S1.Rda'))
+load(here::here('data/tel_coords_S1.Rda'))
+load(here::here('data/medob_coords_S1.Rda'))
+
+load(here::here('data/lizard_trait_data.Rda'))
+
+load(here::here('data/lizard_tree.Rda'))
+
+
+```
+
+Perform a **generalize procrustes analysis (GPA)** with `gpagen` on the coordinate data. GPA aligns all the species coordinates in the most optimal way (e.g., removing scale, orientation, and position) so that we can better compare the shapes of each species to each other.
+```{r message=FALSE}
+library(geomorph)
+
+wb.gpa <- gpagen(wholebrain, ProcD = T, verbose = T, print.progress = F)
+
+```
+
+Creating a geomorph data frame that contains the Procrustes coordinates and the ecological and reproductive trait data
+
+```{r message=FALSE}
+
+wb.gdf <- geomorph.data.frame(wb.gpa, trait)
+
+```
+
+**Performing a principle components analysis with phylogeny considered (phyloPCA)** on Procrustes shape coordinates and plotting them
+```{r}
+library(knitr)
+library(geomorph)
+
+wb.pca <- gm.prcomp(wb.gpa$coords, phy = lzrd_tree, GLS = TRUE)
+
+#kable(summary(wb.pca))
+
+
+
+```
+
+
+Correlation Matrix
+```{r}
+library(Hmisc)
+library(corrplot)
+
+corrmatrix <- rcorr(as.matrix(trait[,c("maxSVL", "fSVL", "hatchlingSVL", 
+                                       "clutch_size", "precip_seasonality", 
+                                       "temp_seasonality")]))
+
+# Need to run the GPA first if I want to see if Csize is correlated!!!!!!!!!!!!
+mydata.cor <- cor(cbind(wb.gdf$Csize, abs(trait$latitude), (trait[,c("maxSVL", "fSVL","hatchlingSVL", "clutch_size", "precip_seasonality", "temp_seasonality")])), 
+                  method = c('pearson'))
+
+mydata.cor
+
+corrmatrix
+
+testRes <- cor.mtest(cbind(wb.gdf$Csize, abs(trait$latitude), (trait[,c("maxSVL", "fSVL", "hatchlingSVL", "clutch_size", "precip_seasonality", "temp_seasonality")])), conf.level = 0.95)
+
+testRes$p
+
+library(RColorBrewer)
+
+corrplot(mydata.cor, method = 'circle', type = 'lower', 
+         addCoef.col ='black', number.cex = 0.8, order = 'AOE', diag=FALSE)
+
+#### THIS IS THE GOOD GRAPH!!!! ######
+corrplot(mydata.cor, p.mat = testRes$p, method = 'circle', type = 'lower', 
+         addCoef.col ='black', number.cex = 0.8, order = 'AOE', 
+         diag=FALSE, 
+         col=colorRampPalette(c("darkgoldenrod2", "white", "darkcyan"))(100), 
+         tl.srt = 45,
+         tl.col = 'black')
+
+
+
+library(sjPlot)
+library(stargazer)
+
+
+```
+
+
+
+Plots
+```{r}
+
+# Print the plot to a pdf file
+pdf(file = here::here("vignettes/phylopcplot.pdf"), width = 4, height = 4)
+
+plot(wb.pca, phylo = TRUE, main = "Phylo PCA", 
+     phylo.par = list(tip.txt.cex = 0.6,
+                      node.labels = F,
+                      node.cex = 0.5,
+                      tip.txt.adj = c(1.1, -0.5)))
+
+dev.off()
+
+library(geomorph)
+library(ape)
+library(phytools)
+
+plotTree(lzrd_tree, ftype = 'i')
+nodelabels(frame = 'circ', bg = 'white', cex = 0.8)
+
+
+
+# wb.pca$x #pc score
+# 
+# plot(wb.pca, time.plot = T, pch = 22, bg = c(rep('red', 5), rep('green', 4)), cex = 2, phylo.par = list(edge.color = 'grey60', edge.width = 1.5, tip.txt.cex = 0.75, node.labels = F, anc.states = F))
+# 
+# 
+# pca3d::pca3d(wb.pca$x)
+# 
+# 
+# # 11/18/2021
+# x1 <- wb.pca$x[,1:3]
+# str(x1)
+# x1
+# order(x1[,1])
+# order(x1[,2])
+# order(x1[,3])
+
+```
+
+
+brain size plots and traits 
+
+```{r}
+plot(wb.gdf$Csize~wb.gdf$precip_seasonality)
+
+
+df <- data.frame(wb.gdf$Csize, wb.gdf$latitude, wb.gdf$precip_seasonality, wb.gdf$temp_seasonality, wb.gdf$clutch_size, wb.gdf$fSVL, wb.gdf$hatchlingSVL, wb.gdf$substrate, wb.gdf$foraging_mode)
+
+library(ggplot2)
+library(hrbrthemes)
+
+# temperature seasonality 
+ggplot(df, aes(x=wb.gdf.temp_seasonality, y=wb.gdf.Csize)) +
+  geom_point() +
+  geom_smooth(method=lm , color="black", fill="lightblue3", se=TRUE) +
+  xlab("Temperature Seasonality") + 
+  ylab("Centroid Size") + 
+  theme_classic()
+
+
+ggplot(df, aes(x=wb.gdf.temp_seasonality, y=log10(wb.gdf.Csize))) +
+  geom_point() +
+  geom_smooth(method=lm , color="black", fill="lightblue3", se=TRUE) +
+  xlab("Temperature Seasonality") + 
+  ylab("log10 Centroid Size") + 
+  theme_classic()
+
+# precipitation seasonality 
+ggplot(df, aes(x=wb.gdf.precip_seasonality, y=wb.gdf.Csize)) +
+  geom_point() +
+  geom_smooth(method=lm , color="black", fill="lightblue3", se=TRUE) +
+  xlab("Precipitation Seasonality") + 
+  ylab("Centroid Size") + 
+  theme_classic()
+
+# latitude 
+ggplot(df, aes(x=abs(wb.gdf.latitude), y=wb.gdf.Csize)) +
+  geom_point() +
+  geom_smooth(method=lm , color="black", fill="lightblue3", se=TRUE) +
+  xlab("Latitude") + 
+  ylab("Centroid Size") + 
+  theme_classic()
+
+
+# clutch size
+ggplot(df, aes(x=wb.gdf.clutch_size, y=wb.gdf.Csize)) +
+  geom_point() +
+  geom_smooth(method=lm , color="black", fill="lightblue3", se=TRUE) +
+  xlab("Clutch Size") + 
+  ylab("Centroid Size") + 
+  theme_classic()
+
+
+# fsvl
+
+ggplot(df, aes(x=wb.gdf.fSVL, y=wb.gdf.Csize)) +
+  geom_point() +
+  geom_smooth(method=lm , color="black", fill="lightblue3", se=TRUE) +
+  xlab("Female SVL") + 
+  ylab("Centroid Size") + 
+  theme_classic()
+
+# hatchling svl
+
+ggplot(df, aes(x=wb.gdf.hatchlingSVL, y=wb.gdf.Csize)) +
+  geom_point() +
+  geom_smooth(method=lm , color="black", fill="lightblue3", se=TRUE) +
+  xlab("Hatchling SVL") + 
+  ylab("Centroid Size") + 
+  theme_classic()
+```
+
+boxplots 
+```{r}
+# substrate
+
+df %>%
+  ggplot(aes(x=wb.gdf.substrate, y=wb.gdf.Csize, fill=wb.gdf.substrate)) +
+    geom_boxplot() +
+    geom_jitter(color="black", size=1, alpha=0.9) +
+    theme_classic() +
+    theme(
+      legend.position="none",
+      plot.title = element_text(size=11), 
+      axis.text.x = element_text(angle = 60, hjust = 1)
+    ) +
+    xlab("") + 
+    ylab("Centroid Size")
+
+# foraging mode
+df %>%
+  ggplot(aes(x=wb.gdf.foraging_mode, y=wb.gdf.Csize, fill=wb.gdf.foraging_mode)) +
+    geom_boxplot() +
+    geom_jitter(color="black", size=1, alpha=0.9) +
+    theme_classic() +
+    theme(
+      legend.position="none",
+      plot.title = element_text(size=11), 
+      axis.text.x = element_text(angle = 60, hjust = 1)
+    ) +
+    xlab("") + 
+    ylab("Centroid Size")
+
+```
+
+pca 3d plots
+```{r}
+library(pca3d)
+# pca3d(wb.pca$x, group = trait$substrate, legend = "topleft", 
+#       show.ellipses = T, ellipse.ci = 0.75)
+
+pca3d(wb.pca$x, group = trait$activity_time, legend = "topleft", 
+      show.ellipses = T, ellipse.ci = 0.75)
+
+pca3d(wb.pca$x, group = trait$foraging_mode, legend = "topleft", 
+      show.ellipses = T, ellipse.ci = 0.75)
+
+pca3d(wb.pca$x, group = trait$reproductive_mode, legend = "topleft", 
+      show.ellipses = T, ellipse.ci = 0.75)
+
+pca2d(wb.pca$x, group = trait$activity_time, legend = "topright", 
+      show.ellipses = T, ellipse.ci = 0.75)
+box(which = "plot", lty = "solid")
+
+pca2d(wb.pca$x, group = trait$foraging_mode, legend = "topright", 
+      show.ellipses = T, ellipse.ci = 0.75)
+box(which = "plot", lty = "solid")
+
+pca2d(wb.pca$x, group = trait$reproductive_mode, legend = "topright", 
+      show.ellipses = T, ellipse.ci = 0.75)
+box(which = "plot", lty = "solid")
+
+```

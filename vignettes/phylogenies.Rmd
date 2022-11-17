@@ -1,0 +1,64 @@
+---
+title: "Phylogenies"
+author: "Lauren E Johnson"
+date: "11/28/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+plotting phylogeny that displays the relationship of CBH and EBH traits
+```{r}
+
+load(here::here('data/lizard_tree.Rda'))
+load(here::here('data/lizard_trait_data.Rda'))
+
+
+```
+
+Phylogeny showing relationship with foraging mode
+```{r}
+library(phytools)
+
+
+fm <- setNames(trait$foraging_mode, rownames(trait))
+
+plot(lzrd_tree, "c", FALSE, font = 1, label.offset = 1, no.margin = T)
+
+tr <- lzrd_tree
+
+tr$tip.label <- mixedFontLabel(rownames(trait), fm, italic = 1, sep = c("", "|"), bold = 2)
+plot(tr, "c", FALSE, no.margin = T)
+
+```
+
+
+Phylogenies showing relationship with other traits
+```{r}
+library(phytools)
+
+clutchsize <-setNames(trait$clutch_size, rownames(trait))
+
+precip <-setNames(trait$precip_seasonality, rownames(trait))
+
+maxSVL <-setNames(trait$maxSVL, rownames(trait))
+
+
+
+contMap(lzrd_tree, clutchsize, plot = T, leg.txt = "Clutch Size")
+contMap(lzrd_tree, precip, plot = T)
+
+plotTree.barplot(lzrd_tree, clutchsize, plot = T, leg.txt = "Clutch Size")
+plotTree.barplot(lzrd_tree, precip, plot = T)
+
+#plotTree.barplot(lzrd_tree, wbgpa$Csize, plot = T, leg.txt = "Clutch Size", args.plotTree=list(fsize=0.5), args.barplot = list(xlab = 'Whole Brain Csize'))
+
+plotTree.barplot(lzrd_tree, maxSVL, plot = T, leg.txt = "Clutch Size", args.plotTree=list(fsize=0.5), args.barplot = list(xlab = 'Whole Brain Csize'))
+
+contMap(lzrd_tree, clutchsize, plot = T)
+
+
+```
+

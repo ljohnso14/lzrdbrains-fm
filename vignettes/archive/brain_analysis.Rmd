@@ -1,0 +1,797 @@
+---
+title: "lizard brain analysis"
+author: "Lauren E Johnson"
+date: "11/9/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load the data:
+```{r message=FALSE}
+load(here::here('data/whole_brain_coords_S1.Rda'))
+load(here::here('data/tel_coords_S1.Rda'))
+load(here::here('data/dien_coords_S1.Rda'))
+load(here::here('data/mes_coords_S1.Rda'))
+load(here::here('data/cere_coords_S1.Rda'))
+load(here::here('data/tel_coords_S1.Rda'))
+load(here::here('data/medob_coords_S1.Rda'))
+
+load(here::here('data/lizard_trait_data.Rda'))
+
+load(here::here('data/lizard_tree.Rda'))
+
+
+```
+
+For analyses we want to use absolute latitude, not latitude since we care about difference between species near the equator and species near the poles, whether they be south or north of the equator
+```{r}
+library(knitr)
+trait$latitude
+
+trait$abslatitude <- abs(trait$latitude)
+
+kable(head(trait))
+```
+
+**1. Phylogentic Signal**
+```{r}
+library(geomorph)
+
+# generalized procrustes analysis 
+S1.GPA <- gpagen(wholebrain, ProcD = T, verbose = T)
+S1.GPA.tel <- gpagen(tel, ProcD = T, verbose = T)
+S1.GPA.dien <- gpagen(dien, ProcD = T, verbose = T)
+S1.GPA.mes <- gpagen(mes, ProcD = T, verbose = T)
+S1.GPA.cere <- gpagen(cere, ProcD = T, verbose = T)
+S1.GPA.medob <- gpagen(medob, ProcD = T, verbose = T)
+
+### Calculate phylogenetic signal 
+physignal(S1.GPA$coords, lzrd_tree)
+physignal(S1.GPA$Csize, lzrd_tree)
+
+physignal(S1.GPA.tel$coords, lzrd_tree)
+physignal(S1.GPA.tel$Csize, lzrd_tree)
+
+physignal(S1.GPA.dien$coords, lzrd_tree)
+physignal(S1.GPA.dien$Csize, lzrd_tree)
+
+physignal(S1.GPA.mes$coords, lzrd_tree)
+physignal(S1.GPA.mes$Csize, lzrd_tree)
+
+physignal(S1.GPA.cere$coords, lzrd_tree)
+physignal(S1.GPA.cere$Csize, lzrd_tree)
+
+physignal(S1.GPA.medob$coords, lzrd_tree)
+physignal(S1.GPA.medob$Csize, lzrd_tree)
+```
+
+**2. Allometry of CSize and Shape** - the results are in our shape pgls because we control for size 
+```{r}
+fit <- procD.pgls(coords ~ Csize, phy = lzrd_tree, data=wholebrain_gpa, iter=999,
+                    print.progress = FALSE)
+summary(fit)
+
+summary(wholebrain_gpa$Csize)
+
+#attempt to plot allometry but realized we don't know what the pc's mean!
+plot(wb.gdf$Csize~wb.pca$x[,1])
+plot(wb.gdf$Csize~wb.pca$x[,2])
+
+allometry_test(wholebrain, lzrd_tree, trait, 'Whole Brain', 'wholebrainallometry.rtf')
+allometry_test(tel, lzrd_tree, trait, 'Telencephalon', 'telallometry.rtf')
+allometry_test(dien, lzrd_tree, trait, 'Diencephalon', 'dienallometry.rtf')
+allometry_test(mes, lzrd_tree, trait, 'Mesencephalon', 'mesallometry.rtf')
+allometry_test(cere, lzrd_tree, trait, 'Cerebellum', 'cereallometry.rtf')
+allometry_test(medob, lzrd_tree, trait, 'Medulla Oblongata', 'medoballometry.rtf')
+
+
+allometry_plot(wholebrain, lzrd_tree, trait, 'Whole Brain', 'wholebrainallom.pdf')
+allometry_plot(tel, lzrd_tree, trait, 'Telencephalon', 'telallom.pdf')
+allometry_plot(dien, lzrd_tree, trait, 'Diencephalon', 'dienallom.pdf')
+allometry_plot(mes, lzrd_tree, trait, 'Mesencephalon', 'mesallom.pdf')
+allometry_plot(cere, lzrd_tree, trait, 'Cerebellum', 'cereallom.pdf')
+allometry_plot(medob, lzrd_tree, trait, 'Medulla Oblongata', 'medoballom.pdf')
+
+
+two.block.plot(wholebrain, lzrd_tree, trait, 'Whole Brain', 'wholebrain2block.pdf')
+two.block.plot(tel, lzrd_tree, trait, 'Telencephalon', 'tel2block.pdf')
+two.block.plot(dien, lzrd_tree, trait, 'Diencephalon', 'dien2block.pdf')
+two.block.plot(mes, lzrd_tree, trait, 'Mesencephalon', 'mes2block.pdf')
+two.block.plot(cere, lzrd_tree, trait, 'Cerebellum', 'cere2block.pdf')
+two.block.plot(medob, lzrd_tree, trait, 'Medulla Oblongata', 'medob2block.pdf')
+
+```
+
+**3. PGLS analysis of size**
+```{r, message = F, results = F}
+
+pgls_size(wholebrain, lzrd_tree, trait, 'Whole Brain', 'wholebrainsize.rtf')
+pgls_size(tel, lzrd_tree, trait, 'Telencephalon', 'telsize.rtf')
+pgls_size(dien, lzrd_tree, trait, 'Diencephalon', 'diensize.rtf')
+pgls_size(mes, lzrd_tree, trait, 'Mesencephalon', 'messize.rtf')
+pgls_size(cere, lzrd_tree, trait, 'Cerebellum', 'ceresize.rtf')
+pgls_size(medob, lzrd_tree, trait, 'Medulla Oblongata', 'medobsize.rtf')
+
+```
+
+**3.b. PGLS analysis of size using log10Csize** No difference
+```{r, message = F, results = F}
+
+pgls_size_logsize(wholebrain, lzrd_tree, trait, 'Whole Brain', 'wholebrainsizelog.rtf')
+pgls_size_logsize(tel, lzrd_tree, trait, 'Telencephalon', 'telsizelog.rtf')
+pgls_size_logsize(dien, lzrd_tree, trait, 'Diencephalon', 'diensizelog.rtf')
+pgls_size_logsize(mes, lzrd_tree, trait, 'Mesencephalon', 'messizelog.rtf')
+pgls_size_logsize(cere, lzrd_tree, trait, 'Cerebellum', 'ceresizelog.rtf')
+pgls_size_logsize(medob, lzrd_tree, trait, 'Medulla Oblongata', 'medobsizelog.rtf')
+
+```
+
+**4. PGLS analysis of shape**
+```{r, message = F, results = F}
+
+pgls_shape(wholebrain, lzrd_tree, trait, 'Whole Brain', 'wholebrainshape.rtf')
+pgls_shape(tel, lzrd_tree, trait, 'Telencephalon', 'telshape.rtf')
+pgls_shape(dien, lzrd_tree, trait, 'Diencephalon', 'dienshape.rtf')
+pgls_shape(mes, lzrd_tree, trait, 'Mesencephalon', 'messhape.rtf')
+pgls_shape(cere, lzrd_tree, trait, 'Cerebellum', 'cereshape.rtf')
+pgls_shape(medob, lzrd_tree, trait, 'Medulla Oblongata', 'medobshape.rtf')
+
+```
+
+**4.b. PGLS analysis of shape using log10Csize** no difference
+```{r, message = F, results = F}
+
+pgls_shape_logsize(wholebrain, lzrd_tree, trait, 'Whole Brain', 'wholebrainshapelog.rtf')
+pgls_shape_logsize(tel, lzrd_tree, trait, 'Telencephalon', 'telshapelog.rtf')
+pgls_shape_logsize(dien, lzrd_tree, trait, 'Diencephalon', 'dienshapelog.rtf')
+pgls_shape_logsize(mes, lzrd_tree, trait, 'Mesencephalon', 'messhapelog.rtf')
+pgls_shape_logsize(cere, lzrd_tree, trait, 'Cerebellum', 'cereshapelog.rtf')
+pgls_shape_logsize(medob, lzrd_tree, trait, 'Medulla Oblongata', 'medobshapelog.rtf')
+
+```
+
+**5. PCA** - (I don't think there is really any analysis, just wireframes)
+
+**6. brain-region-to-whole-brain Csize ratio**
+
+Trying to calculate the percentage volume of each brain region to see if some brain region sizes are more important than others...
+```{r}
+
+library(geomorph)
+
+# generalized procrustes analysis to extract shape and size variables
+wbgpa <- gpagen(wholebrain, ProcD = T, verbose = T)
+cgpa <- gpagen(cere, ProcD = T, verbose = T)
+dgpa <- gpagen(dien, ProcD = T, verbose = T)
+mdgpa <- gpagen(medob, ProcD = T, verbose = T)
+msgpa <- gpagen(mes, ProcD = T, verbose = T)
+tgpa <- gpagen(tel, ProcD = T, verbose = T)
+
+# computing centroid size ratios for each brain regions to the whole brain
+c <- cgpa$Csize/wbgpa$Csize
+d <- dgpa$Csize/wbgpa$Csize
+md <- mdgpa$Csize/wbgpa$Csize
+ms <- msgpa$Csize/wbgpa$Csize
+t <- tgpa$Csize/wbgpa$Csize
+
+# they don't all add up to one...(probably because regions share some coords)
+# creating a data frame that contains all the region-to-whole-brain Csize raitios and the raw Csize values for each region and the whole brain
+prop <- cbind(c, d, md, ms, t, wbgpa$Csize, cgpa$Csize, dgpa$Csize, mdgpa$Csize, msgpa$Csize, tgpa$Csize, trait)
+```
+
+Graphing the proportions of the brain regions to the whole regions
+
+```{r}
+boxplot(c ~ trait$foraging_mode)
+boxplot(ms ~ trait$foraging_mode)
+
+boxplot(msgpa$Csize ~ trait$reproductive_mode)
+
+library(ggpubr)
+# foraging mode and cerebellum and mesencephalon
+ggboxplot(prop, x = 'foraging_mode', y = 'c', 
+          palette = 'jco',
+          add = 'jitter') + stat_compare_means(method = 'anova')
+
+ggboxplot(prop, x = 'foraging_mode', y = 'ms', 
+          palette = 'jco',
+          add = 'jitter') + stat_compare_means(method = 'anova')
+
+ggboxplot(prop, x = 'foraging_mode', y = 't', 
+          palette = 'jco',
+          add = 'jitter') + stat_compare_means(method = 'anova')
+
+# activity time and cerebellum and mesencephalon
+ggboxplot(prop, x = 'activity_time', y = 'c', 
+          palette = 'jco',
+          add = 'jitter') + stat_compare_means(method = 'anova')
+
+ggboxplot(prop, x = 'activity_time', y = 'ms', 
+          palette = 'jco',
+          add = 'jitter') + stat_compare_means(method = 'anova')
+
+# reproductive mode and diencephalon 
+ggboxplot(prop, x = 'reproductive_mode', y = 'd', 
+          palette = 'jco',
+          add = 'jitter') + stat_compare_means(method = 'anova')
+
+# substrate
+ggboxplot(prop, x = 'substrate', y = 'c', 
+          palette = 'jco',
+          add = 'jitter') + stat_compare_means(method = 'anova')
+
+
+# how does cerebellum size scale with brain size across the different foraging modes
+ggscatter(data = prop, x = "wbgpa$Csize", y = "cgpa$Csize", 
+          add = "reg.line", conf.int = TRUE, color = 'foraging_mode',
+          cor.coef = TRUE, cor.method = "pearson")
+
+library(ggridges)
+ggplot(prop, aes(x = c, y = foraging_mode, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1) + xlab('Cerebellum centroid size ratio')
+
+ggplot(prop, aes(x = cgpa$Csize, y = foraging_mode, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1) + xlab('Cerebellum centroid size')
+  
+  geom_density_ridges()
+
+
+ggplot(prop, aes(x = d, y = foraging_mode, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1) + xlab('Diencephalon centroid size ratio')  
+  
+
+ggplot(prop, aes(x = dgpa$Csize, y = foraging_mode, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1) + xlab('Diencephalon centroid size')
+
+ggplot(prop, aes(x = wbgpa$Csize, y = foraging_mode, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1) + xlab('Diencephalon centroid size')
+
+ggplot(prop, aes(x = msgpa$Csize, y = reproductive_mode, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1) + xlab('Mesencephalon centroid size')
+
+```
+Csize relationship with latitude for all brain regions - same result from correlation matrix
+```{r}
+ggplot(data = trait, aes(x=abslatitude, y=wbgpa$Csize)) +
+  geom_point() +
+  #geom_text(label=rownames(trait),  nudge_x = 0.25, nudge_y = 0.25, check_overlap = T) +
+  geom_smooth(method=lm , color="red", fill="#69b3a2", se=TRUE) +
+  stat_cor(label.x = 3, label.y = 10000) +
+  stat_regline_equation(label.x = 3, label.y = 5000) +
+  theme_classic()
+  
+```
+Csize relationship with clutch size for all brain regions - same result from correlation matrix
+```{r}
+ggplot(data = trait, aes(x=clutch_size, y=wbgpa$Csize)) +
+  geom_point() +
+  #geom_text(label=rownames(trait),  nudge_x = 0.25, nudge_y = 0.25, check_overlap = T) +
+  geom_smooth(method=lm , color="red", fill="#69b3a2", se=TRUE) +
+  stat_cor(label.x = 15, label.y = 10000) +
+  stat_regline_equation(label.x = 15, label.y = 5000) +
+  theme_classic()
+```
+
+Csize relationship with foraging mode for all brain regions IN MANUSCRIPT
+```{r}
+library(ggplot2)
+library(ggridges)
+ggplot(prop, aes(x = wbgpa$Csize, y = foraging_mode, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE, jittered_points = T, position = 'points_jitter') +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1, alpha = 0.6) + xlab('Whole Brain CSize') +
+  theme_classic()
+
+ggplot(prop, aes(x = wbgpa$Csize, y = reproductive_mode, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE, jittered_points = T, position = "points_jitter") +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1, alpha = 0.6) + xlab('Whole Brain CSize') +
+  theme_classic()
+
+ggplot(prop, aes(x = foraging_mode, y = wbgpa$Csize)) +
+  geom_boxplot() +
+  geom_jitter()+
+  stat_summary(fun = 'mean', shape = 4)
+  theme_classic()
+  
+ggplot(prop, aes(x = foraging_mode, y = wbgpa$Csize, fill = activity_time)) +
+  geom_boxplot() +
+  geom_jitter(aes(color= activity_time))+
+  stat_summary(fun = 'mean', shape = 4)
+  theme_classic()
+  
+  ggplot(prop, aes(x = foraging_mode, y = wbgpa$Csize, fill = microhabitat)) +
+  geom_boxplot() +
+  geom_jitter(aes(color= microhabitat))+
+  stat_summary(fun = 'mean', shape = 4)
+  theme_classic()
+
+ggplot(prop, aes(x = wbgpa$Csize, y = microhabitat, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1) + xlab('Whole Brain Centroid Size') +
+  theme_classic()
+
+ggplot(prop, aes(x = microhabitat, y = wbgpa$Csize)) +
+  geom_boxplot() +
+  geom_jitter()+
+  stat_summary(fun = 'mean', shape = 4)
+  theme_classic()
+
+ggplot(prop, aes(x = wbgpa$Csize, y = activity_time, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1) + xlab('Whole Brain Centroid Size') +
+  theme_classic()
+
+ggplot(prop, aes(x = activity_time, y = wbgpa$Csize)) +
+  geom_boxplot() +
+  geom_jitter()+
+  stat_summary(fun = 'mean', shape = 4)
+  theme_classic()
+
+library(ggpubr)
+ggplot(data = trait, aes(x=clutch_size, y=wb.gpa$Csize)) +
+  geom_point(aes(color = reproductive_mode)) +
+  #geom_text(label=rownames(trait),  nudge_x = 0.25, nudge_y = 0.25, check_overlap = T) +
+  geom_smooth(method=lm , color="red", fill="purple", se=TRUE) +
+  stat_cor(label.x = 15, label.y = 2500) +
+  stat_regline_equation(label.x = 15, label.y = 2000) +
+  theme_classic()
+
+ggplot(data = trait, aes(x=abslatitude, y=wb.gpa$Csize)) +
+  geom_point(aes(color = reproductive_mode)) +
+  #geom_text(label=rownames(trait),  nudge_x = 0.25, nudge_y = 0.25, check_overlap = T) +
+  geom_smooth(method=lm , color="red", fill="purple", se=TRUE) +
+  stat_cor(label.x = 40, label.y = 40000) +
+  stat_regline_equation(label.x = 40, label.y = 35000) +
+  theme_classic()
+
+ggplot(data = trait, aes(x=temp_seasonality, y=wb.gpa$Csize)) +
+  geom_point() +
+  #geom_text(label=rownames(trait),  nudge_x = 0.25, nudge_y = 0.25, check_overlap = T) +
+  geom_smooth(method=lm , color="red", fill="purple", se=TRUE) +
+  stat_cor(label.x = 9000, label.y = 40000) +
+  stat_regline_equation(label.x = 9000, label.y = 35000) +
+  theme_classic()
+
+ggplot(data = trait, aes(x=precip_seasonality, y=wb.gpa$Csize)) +
+  geom_point() +
+  #geom_text(label=rownames(trait),  nudge_x = 0.25, nudge_y = 0.25, check_overlap = T) +
+  geom_smooth(method=lm , color="red", fill="purple", se=TRUE) +
+  stat_cor(label.x = 100, label.y = 40000) +
+  stat_regline_equation(label.x = 100, label.y = 35000) +
+  theme_classic()
+```
+
+```{r}
+
+car::Anova(pgls1)
+```
+```{r}
+ggplot(prop) +
+  geom_density_ridges(aes(x = wbgpa$Csize, y = foraging_mode, group = interaction(foraging_mode, microhabitat),fill = microhabitat), alpha = 0.7) 
+
+
+ggplot(prop) +
+  geom_density_ridges(aes(x = wbgpa$Csize, y = activity_time, group = interaction(foraging_mode, activity_time),fill = foraging_mode), alpha = 0.7) 
+
+
+
+
+```
+
+
+Csize relationship with substrate
+```{r}
+
+ggplot(prop, aes(x = wbgpa$Csize, y = substrate, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1) + xlab('Whole Brain CSize')
+
+ggplot(prop, aes(x = wbgpa$Csize, y = substrate)) +
+  geom_boxplot()
+
+```
+
+
+
+Graphs for the expensive brain hypothesis and diencephalon and mesencephalon 
+```{r}
+library(ggpubr)
+ggplot(data = trait, aes(x=clutch_size, y=dgpa$Csize)) +
+  geom_point() +
+  #geom_text(label=rownames(trait),  nudge_x = 0.25, nudge_y = 0.25, check_overlap = T) +
+  geom_smooth(method=lm , color="red", fill="#69b3a2", se=TRUE) +
+  stat_cor(label.x = 15, label.y = 2500) +
+  stat_regline_equation(label.x = 15, label.y = 2000) +
+  theme_classic()
+
+#no real relationship with fSVL and csize for diencephalon even though the pgls found something 
+ggplot(data = trait, aes(x=fSVL, y=dgpa$Csize)) +
+  geom_point() +
+  #geom_text(label=rownames(trait),  nudge_x = 0.25, nudge_y = 0.25, check_overlap = T) +
+  geom_smooth(method=lm , color="red", fill="#69b3a2", se=TRUE) +
+  stat_cor(label.x = 15, label.y = 2500) +
+  stat_regline_equation(label.x = 15, label.y = 2000) +
+  theme_classic()
+
+ggplot(prop, aes(x = dgpa$Csize, y = reproductive_mode, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1) + xlab('Diencephalon CSize') +
+  theme_classic()
+
+
+
+# Mesencephalon 
+
+
+ggplot(data = trait, aes(x=clutch_size, y=msgpa$Csize)) +
+  geom_point() +
+  #geom_text(label=rownames(trait),  nudge_x = 0.25, nudge_y = 0.25, check_overlap = T) +
+  geom_smooth(method=lm , color="red", fill="#69b3a2", se=TRUE) +
+  stat_cor(label.x = 15, label.y = 2500) +
+  stat_regline_equation(label.x = 15, label.y = 2000) +
+  theme_classic()
+
+#no real relationship with fSVL and csize for mesencephalon even though the pgls found something 
+ggplot(data = trait, aes(x=fSVL, y=msgpa$Csize)) +
+  geom_point() +
+  #geom_text(label=rownames(trait),  nudge_x = 0.25, nudge_y = 0.25, check_overlap = T) +
+  geom_smooth(method=lm , color="red", fill="#69b3a2", se=TRUE) +
+  stat_cor(label.x = 15, label.y = 2500) +
+  stat_regline_equation(label.x = 15, label.y = 2000) +
+  theme_classic()
+
+ggplot(prop, aes(x = msgpa$Csize, y = reproductive_mode, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1) + xlab('Diencephalon CSize') +
+  theme_classic()
+
+ggplot(prop, aes(x = msgpa$Csize, y = microhabitat, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1) + xlab('Diencephalon CSize') +
+  theme_classic()
+
+# cerebellum
+
+ggplot(prop, aes(x = wbgpa$Csize, y = microhabitat, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1) + xlab('Diencephalon CSize') +
+  theme_classic()
+
+```
+
+
+
+### **Analysis that is shown in manuscript**
+
+
+Perform a **generalize procrustes analysis (GPA)** with `gpagen` on the coordinate data. GPA aligns all the species coordinates in the most optimal way (e.g., removing scale, orientation, and position) so that we can better compare the shapes of each species to each other.
+```{r message=FALSE}
+library(geomorph)
+
+wb.gpa <- gpagen(wholebrain, ProcD = T, verbose = T, print.progress = F)
+t.gpa <- gpagen(tel, ProcD = T, verbose = T, print.progress = F)
+d.gpa <- gpagen(dien, ProcD = T, verbose = T, print.progress = F)
+
+```
+
+Creating a geomorph data frame that contains the Procrustes coordinates and the ecological and reproductive trait data
+
+```{r message=FALSE}
+
+wb.gdf <- geomorph.data.frame(wb.gpa, trait)
+t.gdf <- geomorph.data.frame(t.gpa, trait)
+d.gdf <- geomorph.data.frame(d.gpa, trait)
+
+```
+
+**Combined Models** what is actually in the manuscript!!!!!!!!
+```{r}
+
+library(gt)
+library(geomorph)
+library(knitr)
+#Expensive Brain Hypothesis
+pgls1 <- procD.pgls(coords ~ Csize + fSVL + hatchlingSVL + reproductive_mode + clutch_size, phy = lzrd_tree, SS.type = "II", data = wb.gdf)
+
+pgls2 <- procD.pgls(Csize  ~ fSVL + hatchlingSVL + reproductive_mode + clutch_size, phy = lzrd_tree, SS.type = "II", data = wb.gdf)
+
+summary(pgls1)
+summary(pgls2)
+
+#Cognitive Buffer Hypothesis
+
+pgls3 <- procD.pgls(coords ~ Csize + abslatitude + precip_seasonality + temp_seasonality + microhabitat + activity_time + foraging_mode, phy = lzrd_tree, SS.type = "II", data = wb.gdf) 
+
+pgls4 <- procD.pgls(Csize ~ abslatitude + precip_seasonality + temp_seasonality + microhabitat + activity_time + foraging_mode, phy = lzrd_tree, SS.type = "II", data = wb.gdf) 
+
+
+
+summary(pgls1)
+summary(pgls2)
+summary(pgls3)
+summary(pgls4)
+
+t1 <- broom::tidy(pgls1$aov.table)
+t2 <- broom::tidy(pgls2$aov.table)
+t3 <- broom::tidy(pgls3$aov.table)
+t4 <- broom::tidy(pgls4$aov.table)
+
+mergedtable <- rbind(t1, t2, t3, t4)
+
+mergedtablefancy <- gt(mergedtable) %>%
+    cols_label(term = 'Source', statistic = 'F', p.value = 'p-value') %>%
+    fmt_number(columns = c('SS', 'MS', 'Rsq', 'statistic', 'Z', 'p.value'), decimals = 4) %>%
+    fmt_missing(columns = 2:8, missing_text = " ") %>% 
+    tab_footnote(footnote = "df, degree of freedom.", locations = cells_column_labels(columns = df)) %>%
+    tab_footnote(footnote = "SS, sum of squares.", locations = cells_column_labels(columns = SS)) %>%
+    tab_footnote(footnote = "MS, mean squares.", locations = cells_column_labels(columns = MS)) %>%
+    tab_footnote(footnote = "Significant values (p-value < 0.05) from permutation tests (1,000 permutation rounds) are bolded.",locations = cells_column_labels(columns = p.value))%>%
+    tab_row_group(label = 'Expensive Brain - Shape', rows = 1:7) %>%
+    tab_row_group(label = 'Expensive Brain - Size', rows = 8:13) %>%
+    tab_row_group(label = 'Cognitive Buffer - Shape', rows = 14:22) %>%
+    tab_row_group(label = 'Cognitive Buffer - Size', rows = 23:30)
+
+mergedtablefancy
+
+gtsave(mergedtablefancy, filename = 'combinedpglsoutput_05.19.2022.rtf', exapnd = 10)
+
+
+
+
+```
+
+graphing results 
+```{r}
+library(ggplot2)
+library(ggridges)
+library(ggpubr)
+
+# Export all graphs as 5x7 pdf
+
+wbdata <- cbind(wb.gdf$Csize, trait)
+
+# main text of manuscript
+fm.plot <- ggplot(wbdata, aes(x = wb.gdf$Csize, y = foraging_mode, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE, jittered_points = T, position = 'points_jitter', scale = 0.8, alpha = 0.5) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1, alpha = 1) + xlab('Whole Brain CSize') +
+  ylab('Foraging Mode') + 
+  scale_y_discrete(labels = c('sit_and_wait' = 'Sit & Wait', 'mixed' = 'Mixed', 'active_foraging' = 'Active')) +
+  theme_classic()
+
+# supplementary 
+at.plot <- ggplot(wbdata, aes(x = wb.gdf$Csize, y = activity_time, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE, jittered_points = T, position = 'points_jitter', scale = 0.8, alpha = 0.5) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1, alpha = 1) + xlab('Whole Brain CSize') +
+  ylab('Activity Time') +
+  scale_y_discrete(limits = c('Cathemeral','Nocturnal','Diurnal')) +
+  theme_classic()
+
+#supplementary 
+mh.plot <- ggplot(wbdata, aes(x = wb.gdf$Csize, y = microhabitat, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE, jittered_points = T, position = 'points_jitter', scale = 0.8, alpha = 0.5) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1, alpha = 1) + xlab('Whole Brain CSize') +
+  ylab('Microhabitat') +
+  scale_y_discrete(limits = c('Fossorial','Terrestrial','Scansorial')) +
+  theme_classic()
+
+#fig1 <- ggarrange(fm.plot, at.plot, mh.plot, labels = c('A', 'B', 'C'), ncol = 3)
+
+cs.plot <- ggplot(data = wbdata, aes(x=clutch_size, y=wb.gdf$Csize)) +
+  geom_point(size = 3) +
+  #geom_text(label=rownames(trait),  nudge_x = 0.25, nudge_y = 0.25, check_overlap = T) +
+  geom_smooth(method=lm , color="deepskyblue4", fill="deepskyblue4", se=TRUE) +
+  ylab('Whole Brain CSize')+
+  xlab('Clutch Size') +
+  theme_classic()
+
+
+rm.plot <- ggplot(wbdata, aes(x = wb.gdf$Csize, y = reproductive_mode, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE, jittered_points = T, position = 'points_jitter', scale = 0.8, alpha = 0.5) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1, alpha = 1) + xlab('Whole Brain CSize') +
+  ylab('Reproductive Mode') +
+  theme_classic()
+
+```
+
+Get the x and y intercept for Csize
+```{r}
+kable(pgls2$pgls.coefficients)
+
+kable(pgls4$pgls.coefficients)
+
+# clutch size equation
+#y = 1,179x + 15,050 
+```
+
+
+
+Since there wasn't a strong phylogenetic signal with Csize, I'm gonna use the rrpp method to see if I can get post-hoc differences - also a good way to see if our results are robust
+```{r}
+library(RRPP)
+rrpp1 <- lm.rrpp(Csize ~ abslatitude + precip_seasonality + temp_seasonality + microhabitat + activity_time + foraging_mode, SS.type = "II", data = wb.gdf) 
+
+anova(rrpp1)
+
+PW1 <- pairwise(rrpp1, groups = wb.gdf$foraging_mode)
+PW2 <- pairwise(rrpp1, groups = wb.gdf$microhabitat)
+
+summary(PW1)
+summary(PW2)
+
+rrpp2 <- lm.rrpp(Csize  ~ fSVL + hatchlingSVL + reproductive_mode + clutch_size, SS.type = "II", data = wb.gdf)
+anova(rrpp2)
+PW3 <- pairwise(rrpp2, groups = wb.gdf$reproductive_mode)
+summary(PW3)
+
+
+```
+
+
+
+Test the pgls for EBH shape for collinearity with fSVL and hSVL
+```{r}
+
+pgls1 <- procD.pgls(coords ~ Csize + fSVL + hatchlingSVL + reproductive_mode + clutch_size, phy = lzrd_tree, SS.type = "II", data = wb.gdf)
+
+# can't figure out how to get this to work right now
+car::vif(pgls1$pgls.coefficients)
+
+pgls1$LM$gls.coefficients
+```
+
+do larger females have larger brains and are found towards the torpics 
+```{r}
+library(geomorph)
+
+pgls1 <- procD.pgls(fSVL ~ abslatitude + Csize, phy = lzrd_tree, SS.type = "II", data = wb.gdf)
+
+summary(pgls1)
+
+```
+Testing for pariwise comparisins
+
+
+```{r}
+library(RRPP)
+pgls3 <- procD.pgls(coords ~ abslatitude + precip_seasonality + temp_seasonality + microhabitat + activity_time + foraging_mode, phy = lzrd_tree, SS.type = "II", data = wb.gdf) 
+
+PWfm <- pairwise(pgls3, groups = wb.gdf$foraging_mode)
+PWat <- pairwise(pgls4, groups = wb.gdf$activity_time)
+PWm <- pairwise(pgls4, groups = wb.gdf$microhabitat)
+
+morphol.disparity(pgls3, groups = wb.gdf$foraging_mode, iter= 999)
+
+an <- anova.lm.rrpp(pgls4)
+
+summary(PWfm, test.type = "dist", confidence = 0.95, stat.table = TRUE)
+summary(PWfm, test.type = "var", confidence = 0.95, stat.table = TRUE)
+
+
+summary(PWat, test.type = "dist", confidence = 0.95, stat.table = TRUE)
+summary(PWm, test.type = "dist", confidence = 0.95, stat.table = TRUE)
+
+```
+Test pgls shape CBH without Csize since it was not significant when run with the full model
+This makes a big difference - temperature seasonality and foraging mode are signficant, and 
+
+```{r}
+pgls3 <- procD.pgls(coords ~ abslatitude + precip_seasonality + temp_seasonality + microhabitat + activity_time + foraging_mode, phy = lzrd_tree, SS.type = "II", data = wb.gdf) 
+
+summary(pgls3)
+
+```
+
+**Performing a principle components analysis with phylogeny considered (phyloPCA)** on Procrustes shape coordinates and plotting them
+```{r}
+library(knitr)
+library(geomorph)
+
+wb.pca <- gm.prcomp(wb.gpa$coords, phy = lzrd_tree, GLS = TRUE)
+
+kable(summary(wb.pca))
+
+plot(wb.pca, phylo = TRUE, main = "Phylo PCA")
+
+wb.pca$x #pc score
+
+plot(wb.pca, axis1 = 3, axis2 = 4, phylo = TRUE, main = "Phylo PCA")
+
+
+# 11/18/2021
+x1 <- wb.pca$x[,1:3]
+str(x1)
+x1
+order(x1[,1])
+order(x1[,2])
+order(x1[,3])
+
+```
+
+**Phylogenetic ANOVA/regression** for Procrustes shape variables 
+```{r}
+
+library(geomorph)
+
+wb.pgls <- procD.pgls(coords ~ Csize + hatchlingSVL, phy = lzrd_tree, SS.type = "III", effect.type = 'F', data = wb.gdf)
+
+summary(wb.pgls)
+
+wb.pgls <- procD.pgls(Csize ~ temp_seasonality, phy = lzrd_tree, SS.type = "III", effect.type = 'F', data = wb.gdf)
+
+summary(wb.pgls)
+
+
+plot(wb.gdf$Csize ~ wb.gdf$temp_seasonality)
+plot(wb.gdf$Csize ~ wb.gdf$latitude)
+
+plot(log(wb.gdf$Csize) ~ wb.gdf$temp_seasonality)
+
+plot(log(wb.gdf$Csize) ~ wb.gdf$latitude)
+
+plot(wb.gdf$Csize ~ wb.gdf$clutch_size)
+
+
+
+```
+ 
+ 
+ 
+ridgeline plots
+
+```{r}
+library(ggridges)
+library(ggplot2)
+ggplot(wb.gdf, aes(x = Csize, y = foraging_mode, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1) + xlab('Whole Brain Centroid Size')
+
+```
+ 
+ 
+
+Get the data formated, procrustes, pca, etc. (make sure to say why we're doing it) refer to this vignette <https://www.cnidaria.nat.uni-erlangen.de/shortcourse/GMM%20Tutorial_11.1.2018.html>
+
+
+**Correlation matrix** between continuous trait variables - included in manuscript
+```{r}
+library(Hmisc)
+library(corrplot)
+
+corrmatrix <- rcorr(as.matrix(trait[,c("maxSVL", "fSVL", "hatchlingSVL", 
+                                       "clutch_size", "precip_seasonality", 
+                                       "temp_seasonality")]))
+
+# Need to run the GPA first if I want to see if Csize is correlated!!!!!!!!!!!!
+mydata.cor <- cor(cbind(wholebrain_gpa$Csize, (trait[,c("latitude", "maxSVL", "fSVL","hatchlingSVL", "clutch_size", "precip_seasonality", "temp_seasonality")])), 
+                  method = c('pearson'))
+
+mydata.cor
+
+corrmatrix
+
+testRes <- cor.mtest(cbind(wholebrain_gpa$Csize, (trait[,c("latitude", "maxSVL", "fSVL", "hatchlingSVL", "clutch_size", "precip_seasonality", "temp_seasonality")])), conf.level = 0.95)
+
+testRes$p
+
+library(RColorBrewer)
+
+corrplot(mydata.cor, method = 'circle', type = 'lower', 
+         addCoef.col ='black', number.cex = 0.8, order = 'AOE', diag=FALSE)
+
+#### THIS IS THE GOOD GRAPH!!!! ######
+corrplot(mydata.cor, p.mat = testRes$p, method = 'circle', type = 'lower', 
+         addCoef.col ='black', number.cex = 0.8, order = 'AOE', 
+         diag=FALSE, 
+         col=colorRampPalette(c("darkgoldenrod2", "white", "darkcyan"))(100), 
+         tl.srt = 45,
+         tl.col = 'black')
+```
+

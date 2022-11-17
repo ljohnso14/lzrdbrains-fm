@@ -1,0 +1,30 @@
+---
+title: "test"
+author: "Lauren E Johnson"
+date: "11/17/2021"
+output: html_document
+---
+
+
+```{r cars}
+
+x  <- rnorm(100, 0,10)
+y <- rnorm(100, 1,10)
+
+model <- lm(y~x)
+
+## don't know how it's stored
+names(summary(model))
+model$coefficients
+
+
+summary(model)$coefficients
+
+knitr::kable(summary(model)$coefficients)
+
+
+#stargazer package can help make tables 
+# pubbr?
+
+# pretty tables, r markdown
+```

@@ -1,0 +1,118 @@
+---
+title: "stargazer"
+author: "Lauren E Johnson"
+date: "12/4/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+load(here::here('data/whole_brain_coords_S1.Rda'))
+load(here::here('data/tel_coords_S1.Rda'))
+load(here::here('data/dien_coords_S1.Rda'))
+load(here::here('data/mes_coords_S1.Rda'))
+load(here::here('data/cere_coords_S1.Rda'))
+load(here::here('data/tel_coords_S1.Rda'))
+load(here::here('data/medob_coords_S1.Rda'))
+
+load(here::here('data/lizard_trait_data.Rda'))
+
+load(here::here('data/lizard_tree.Rda'))
+```
+
+
+```{r}
+
+library(stargazer)
+library(geomorph)
+library(gt)
+
+gpa <- gpagen(wholebrain, ProcD = T, verbose = T)
+gdf <- geomorph.data.frame(gpa, trait)
+  
+pgls1 <- procD.pgls(Csize ~ latitude, phy = lzrd_tree, SS.type = "III", data = gdf, iter = 10000, print.progress = F)
+
+pgls2 <- procD.pgls(Csize ~ fSVL, phy = lzrd_tree, SS.type = "III", data = gdf, iter = 10000, print.progress = F)
+
+capture.output(pgls1$aov.table, file = 'testoutput.doc')
+library(gtsummary)
+
+tbl_regression(pgls1$LM)
+
+print.procD.lm(pgls1)
+
+print(pgls1)
+  
+pgls2 <- summary(procD.pgls(coords ~ Csize + latitude, phy = lzrd_tree, SS.type = "III", data = gdf))
+
+# kable((procD.pgls(coords ~ Csize + latitude, phy = lzrd_tree, SS.type = "III", data = gdf)))
+# 
+# summary(pgls1)
+# 
+# tab_model(pgls1$aov.table)
+# 
+# kable(pgls1$aov.table)
+# intab_model(pgls1$aov.table)
+# 
+# stargazer(pgls1, pgls2, type = "html")
+# 
+# 
+# mydata.cor <- cor(cbind(wb.gdf$Csize, (trait[,c("latitude", "maxSVL", "fSVL","hatchlingSVL", "clutch_size", "precip_seasonality", "temp_seasonality")])), 
+#                   method = c('pearson'))
+# 
+# stargazer(mydata.cor, type = 'html')
+# #################################3
+# yes!!! this works!!!!!
+# broom::tidy works just doesn't recognize some of the objects
+pgls1tibble <- broom::tidy(pgls1$aov.table)
+pgls2tibble <- broom::tidy(pgls2$aov.table)
+# https://gt.rstudio.com/reference/index.html#section-modify-rows
+library(tidyverse)
+gttable1 <- gt::gt(pgls1tibble) %>% gt::cols_label(term = 'Effect', statistic = 'F') %>% gt::fmt_number(columns = c('SS', 'MS', 'Rsq', 'statistic', 'Z', 'p.value'), decimals = 4) %>% gt::fmt_missing(columns = 2:8, missing_text = " ")
+
+gttable2 <- gt::gt(pgls2tibble) %>% gt::cols_label(term = 'Effect', statistic = 'F') %>% gt::fmt_number(columns = c('SS', 'MS', 'Rsq', 'statistic', 'Z', 'p.value'), decimals = 4) %>% gt::fmt_missing(columns = 2:8, missing_text = " ")
+
+mergedtable <- rbind(pgls1tibble, pgls2tibble)
+
+mergedtablefancy <- gt::gt(mergedtable) %>% gt::cols_label(term = 'Effect', statistic = 'F', p.value = 'p-value') %>% gt::fmt_number(columns = c('SS', 'MS', 'Rsq', 'statistic', 'Z', 'p.value'), decimals = 4) %>% gt::fmt_missing(columns = 2:8, missing_text = " ") %>% tab_header(title = md("Whole-brain"))
+
+gt::gtsave(mergedtablefancy, filename = 'gttable-append.rtf', exapnd = 10)
+
+gt::gtsave(gttable1, filename = 'gttable-append.rtf', expand = 10)
+gt::gtsave(gttable2, filename = 'gttable-append.rtf', expand = 10, )
+
+
+#######
+broom::tidy(summary(pgls1))
+broom::augment(pgls1$ANOVA)
+# 
+# aovpgls1 <- anova(pgls1)
+# 
+# kable(aovpgls1)
+# 
+# broom::tidy(aovpgls1)
+# 
+# 
+# summary(pgls1)
+# 
+# 
+as_flextable(pgls1$anova)
+
+#this worked
+
+library(tidyverse)
+knitr::kable(pgls1$aov.table) %>%  kableExtra::kable_styling("striped", "scale_down") %>% kableExtra::as_image(width = 8) %>% kableExtra::save_kable("testkable.pdf")
+
+
+knitr::kable(pgls1$aov.table) %>%  kableExtra::kable_styling("striped", "scale_down")  %>% kableExtra::save_kable("testkable.html")
+
+knitr::kable(pgls1$aov.table) %>%  kableExtra::kable_styling("striped", "scale_down")  %>% kableExtra::save_kable("testkable.pdf")
+# p
+
+# capture.output(p, file = 'testkable.doc', append = T)
+
+
+```

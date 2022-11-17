@@ -1,0 +1,35 @@
+---
+title: "map"
+author: "Lauren E Johnson"
+date: "12/2/2021"
+output: html_document
+---
+### Map 
+Creating a map that displays the global distribution of the 29 species in our dataset 
+
+```{r}
+library(maps)
+
+load(here::here('data/lizard_trait_data.Rda'))
+
+# creating a pdf where the map will be exported to 
+#pdf(file = here::here('vignettes/my_map.pdf'))
+
+# select the size of the pdf output 
+par(mar = c(4.1, 4.4, 4.1, 1.9), xaxs="i", yaxs="i")
+
+# create the base map 
+maps::map('world', fill = T, col = 'lightgrey', bg = 'aliceblue', border = NA)
+
+# add species locations 
+points(trait$longitude, trait$latitude, col = 'red', pch = 19, cex = 0.5)
+
+# add species labels 
+text(trait$longitude, trait$latitude, trait$Id, pos = 4, col = 'blue', cex = 0.5)
+
+dev.off()
+
+```
+
+
+

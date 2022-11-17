@@ -1,0 +1,11 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/842470/b9906a7cb6c445ef87edbec5af0e9d2b
+bundleId: https://api.rpubs.com/api/v1/document/842470/b9906a7cb6c445ef87edbec5af0e9d2b
+url: http://rpubs.com/ljohnso14/842470
+when: 1638457993.47892
+lastSyncTime: 1638457993.47892

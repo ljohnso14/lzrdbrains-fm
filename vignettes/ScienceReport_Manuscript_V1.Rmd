@@ -1,0 +1,422 @@
+---
+title: "ScienceReport_Manuscript_V1"
+author: "Lauren E Johnson"
+date: "5/25/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Contents
+
+
+
+#### **1. Load the data**  
+Load 3D brain coordinates for the wholebrain and each region: telencephalon (tel), diencephalon (dien), mesencephalon (mes), cerebellum (cere), and medulla oblongata (medob). Load trait data. Load phylogenetic tree. 
+```{r message=FALSE}
+# Brain coordinate data
+load(here::here('data/whole_brain_coords_S1.Rda')) # wholebrain
+load(here::here('data/tel_coords_S1.Rda'))         # tel
+load(here::here('data/dien_coords_S1.Rda'))        # dien
+load(here::here('data/mes_coords_S1.Rda'))         # mes
+load(here::here('data/cere_coords_S1.Rda'))        # cere
+load(here::here('data/medob_coords_S1.Rda'))       # medob
+
+# Trait data
+load(here::here('data/lizard_trait_data.Rda'))
+
+# Phylogenetic tree data
+load(here::here('data/lizard_tree.Rda'))
+
+
+```
+
+#### **2. Whole brain size and shape analysis**
+
+**Part 1.** Perform a **generalize procrustes analysis (GPA)** with `gpagen` on the coordinate data. GPA aligns all the species coordinates in the most optimal way (e.g., removing scale, orientation, and position) so that we can better compare the shapes of each species to each other.
+
+```{r message=FALSE, warning=FALSE}
+library(geomorph)
+
+wb.gpa <- gpagen(wholebrain, ProcD = T, verbose = T, print.progress = F)
+
+```
+
+**Part 2.** Create a geomorph data frame that contains the Procrustes coordinates and the trait data. This will be used in subsequent analyses. 
+```{r message=FALSE, warning=FALSE}
+
+wb.gdf <- geomorph.data.frame(wb.gpa, trait)
+
+```
+
+**Part 3.** Run a **Phylogenetic ANOVA/regression (PGLS)** with `procD.pgls` to test for correlations between ecological traits and whole brain size and shape.  
+
+**Whole Brain Shape:**  
+note: we included Csize as a covariate since shape often covaries with size. Refer to supplementary information for how much shape variation is explained by size. 
+```{r message=FALSE, warning=FALSE}
+
+pgls_wb.shape <- procD.pgls(coords ~ Csize + abslatitude + precip_seasonality + temp_seasonality + microhabitat + activity_time + foraging_mode, phy = lzrd_tree, SS.type = "II", data = wb.gdf, print.progress = F)
+
+```
+
+**Whole Brain Size:**    
+```{r message=FALSE, warning=FALSE}
+
+pgls_wb.size <- procD.pgls(Csize ~ abslatitude + precip_seasonality + temp_seasonality + microhabitat + activity_time + foraging_mode, phy = lzrd_tree, SS.type = "II", data = wb.gdf, print.progress = F) 
+
+```
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+library(gt)
+
+t1 <- broom::tidy(pgls_wb.shape$aov.table)
+t2 <- broom::tidy(pgls_wb.size$aov.table)
+
+# SHAPE
+t1fancy <- gt(t1) %>%
+    tab_header(title = md("Whole Brain Shape")) %>%
+    cols_label(term = 'Source', statistic = 'F', p.value = 'p-value') %>%
+    fmt_number(columns = c('SS', 'MS'), decimals = 4) %>%
+    fmt_number(columns = c('statistic', 'Z'), decimals = 2) %>%
+    fmt_number(columns = c('Rsq', 'p.value'), decimals = 3) %>%
+    fmt_missing(columns = 2:8, missing_text = " ") %>% 
+    tab_footnote(footnote = "df, degree of freedom.", locations = cells_column_labels(columns = df)) %>%
+    tab_footnote(footnote = "SS, sum of squares.", locations = cells_column_labels(columns = SS)) %>%
+    tab_footnote(footnote = "MS, mean squares.", locations = cells_column_labels(columns = MS)) %>%
+    tab_footnote(footnote = "Significant values (p-value < 0.05) from permutation tests (1,000 permutation rounds) are bolded.",locations = cells_column_labels(columns = p.value)) %>%
+    tab_style(style = list(cell_text(weight = "bold")), 
+              locations = cells_body(columns = p.value, rows = p.value < 0.05))
+
+# SIZE
+t2fancy <- gt(t2) %>%
+    tab_header(title = md("Whole Brain Size")) %>%
+    cols_label(term = 'Source', statistic = 'F', p.value = 'p-value') %>%
+    fmt_number(columns = c('SS', 'MS'), decimals = 0) %>%
+    fmt_number(columns = c('statistic', 'Z'), decimals = 2) %>%
+    fmt_number(columns = c('Rsq', 'p.value'), decimals = 3) %>%
+    fmt_missing(columns = 2:8, missing_text = " ") %>% 
+    tab_footnote(footnote = "df, degree of freedom.", locations = cells_column_labels(columns = df)) %>%
+    tab_footnote(footnote = "SS, sum of squares.", locations = cells_column_labels(columns = SS)) %>%
+    tab_footnote(footnote = "MS, mean squares.", locations = cells_column_labels(columns = MS)) %>%
+    tab_footnote(footnote = "Significant values (p-value < 0.05) from permutation tests (1,000 permutation rounds) are bolded.",locations = cells_column_labels(columns = p.value)) %>%
+    tab_style(style = list(cell_text(weight = "bold")), 
+              locations = cells_body(columns = p.value, rows = p.value < 0.05))
+
+t1fancy
+t2fancy
+
+#gtsave(mergedtablefancy, filename = 'combinedpglsoutput_05.19.2022.rtf', exapnd = 10)
+```
+
+**Effect size** of each ecological variable on Csize. In other words, the slope. 
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+knitr::kable(pgls_wb.size$pgls.coefficients)
+```
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+library(ggplot2)
+library(ggridges)
+library(ggpubr)
+
+# Export all graphs as 5x7 pdf
+```
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+wbdata <- cbind(wb.gdf$Csize, trait)
+```
+
+**Fig 1.** Foraging Mode   
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+# main text of manuscript
+fm.plot <- ggplot(wbdata, aes(x = wb.gdf$Csize, y = foraging_mode, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE, jittered_points = T, position = 'points_jitter', scale = 0.8, alpha = 0.5) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1, alpha = 1) + xlab('Whole Brain CSize') +
+  ylab('Foraging Mode') + 
+  scale_y_discrete(labels = c('sit_and_wait' = 'Sit & Wait', 'mixed' = 'Mixed', 'active_foraging' = 'Active')) +
+  theme_classic()
+
+plot(fm.plot)
+```
+
+**Fig S1.** Activity Time  
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+# supplementary 
+at.plot <- ggplot(wbdata, aes(x = wb.gdf$Csize, y = activity_time, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE, jittered_points = T, position = 'points_jitter', scale = 0.8, alpha = 0.5) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1, alpha = 1) + xlab('Whole Brain CSize') +
+  ylab('Activity Time') +
+  scale_y_discrete(limits = c('Cathemeral','Nocturnal','Diurnal')) +
+  theme_classic()
+
+plot(at.plot)
+```
+
+**Fig S2.** Microhabitat  
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+#supplementary 
+mh.plot <- ggplot(wbdata, aes(x = wb.gdf$Csize, y = microhabitat, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE, jittered_points = T, position = 'points_jitter', scale = 0.8, alpha = 0.5) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1, alpha = 1) + xlab('Whole Brain CSize') +
+  ylab('Microhabitat') +
+  scale_y_discrete(limits = c('Fossorial','Terrestrial','Scansorial')) +
+  theme_classic()
+
+plot(mh.plot)
+```
+
+
+**Part 4.** To visualize shape variation, we performed a **principle components analysis with phylogeny considered (phyloPCA)** with `gm.prcomp` on the Procrustes shape coordinates and plotted them.
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+library(knitr)
+library(geomorph)
+```
+
+```{r message=FALSE, warning=FALSE, results='hide'}
+wb.pca <- gm.prcomp(wb.gpa$coords, phy = lzrd_tree, GLS = TRUE)
+```
+
+```{r message=FALSE, warning=FALSE}
+kable(summary(wb.pca))
+```
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+plot(wb.pca, phylo = TRUE, main = "Phylo PCA")
+
+#wb.pca$x #pc score
+
+plot(wb.pca, axis1 = 3, axis2 = 4, phylo = TRUE, main = "Phylo PCA")
+
+```
+
+
+
+### Regional Brain Size/Shape Association with Foraging Mode
+We are interested in the whole brain. We are also interested in the telencephalon and diencephalon becasue they are associated with olfaction and vision, respectively. This will be important when we test for association between these regions directly and the foraging modes associated with those sensory modalities. 
+GPA on coordinates for each brain region
+```{r, message=FALSE, warning=FALSE, results='hide'}
+library(geomorph)
+c.gpa <- gpagen(cere, ProcD = T, verbose = T)
+d.gpa <- gpagen(dien, ProcD = T, verbose = T)
+md.gpa <- gpagen(medob, ProcD = T, verbose = T)
+ms.gpa <- gpagen(mes, ProcD = T, verbose = T)
+t.gpa <- gpagen(tel, ProcD = T, verbose = T)
+```
+
+Create geomorph dataframe for each brain region
+```{r}
+library(geomorph)
+c.gdf <- geomorph.data.frame(c.gpa, trait)
+d.gdf <- geomorph.data.frame(d.gpa, trait)
+md.gdf <- geomorph.data.frame(md.gpa, trait)
+ms.gdf <- geomorph.data.frame(ms.gpa, trait)
+t.gdf <- geomorph.data.frame(t.gpa, trait)
+
+```
+
+Compute Csize ratio for each brain region to the whole brain
+(they don't all add up to one...probably because the regions share some coordinates)
+```{r}
+c <- c.gpa$Csize/wb.gpa$Csize
+d <- d.gpa$Csize/wb.gpa$Csize
+md <- md.gpa$Csize/wb.gpa$Csize
+ms <- ms.gpa$Csize/wb.gpa$Csize
+t <- t.gpa$Csize/wb.gpa$Csize
+```
+
+Create a data frame containing all the rgion-to-whole-brain Csize ratios and the raw Csize values for each region and the trait values
+```{r}
+prop <- cbind(c, d, md, ms, t, wb.gpa$Csize, c.gpa$Csize, d.gpa$Csize, md.gpa$Csize, ms.gpa$Csize, t.gpa$Csize, trait)
+```
+
+PGLS of regional brain shape and foraging mode RESULTS: No regional effect of foraging mode on shape  
+```{r message=FALSE, warning=FALSE}
+
+pgls_cshape <- procD.pgls(coords ~ Csize + foraging_mode, phy = lzrd_tree, data=c.gdf, iter=999, print.progress = FALSE)
+pgls_dshape <- procD.pgls(coords ~ Csize + foraging_mode, phy = lzrd_tree, data=d.gdf, iter=999, print.progress = FALSE)
+pgls_mdshape <- procD.pgls(coords ~ Csize + foraging_mode, phy = lzrd_tree, data=md.gdf, iter=999, print.progress = FALSE)
+pgls_msshape <- procD.pgls(coords ~ Csize + foraging_mode, phy = lzrd_tree, data=ms.gdf, iter=999, print.progress = FALSE)
+pgls_tshape <- procD.pgls(coords ~ Csize + foraging_mode, phy = lzrd_tree, data=t.gdf, iter=999, print.progress = FALSE)
+
+```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+library(gt)
+t1 <- broom::tidy(pgls_cshape$aov.table)
+t2 <- broom::tidy(pgls_dshape$aov.table)
+t3 <- broom::tidy(pgls_mdshape$aov.table)
+t4 <- broom::tidy(pgls_msshape$aov.table)
+t5 <- broom::tidy(pgls_tshape$aov.table)
+
+mergedtable_shape <- rbind(t1, t2, t3, t4, t5)
+
+mergedtable_shape_fancy <- gt(mergedtable_shape) %>%
+    tab_header(title = md("Regional Brain Shape")) %>%
+    cols_label(term = 'Source', statistic = 'F', p.value = 'p-value') %>%
+    fmt_number(columns = c('SS', 'MS'), decimals = 4) %>%
+    fmt_number(columns = c('statistic', 'Z'), decimals = 2) %>%
+    fmt_number(columns = c('Rsq', 'p.value'), decimals = 3) %>%
+    fmt_missing(columns = 2:8, missing_text = " ") %>% 
+    tab_footnote(footnote = "df, degree of freedom.", locations = cells_column_labels(columns = df)) %>%
+    tab_footnote(footnote = "SS, sum of squares.", locations = cells_column_labels(columns = SS)) %>%
+    tab_footnote(footnote = "MS, mean squares.", locations = cells_column_labels(columns = MS)) %>%
+    tab_footnote(footnote = "Significant values (p-value < 0.05) from permutation tests (1,000 permutation rounds) are bolded.",locations = cells_column_labels(columns = p.value)) %>%
+    tab_style(style = list(cell_text(weight = "bold")), 
+              locations = cells_body(columns = p.value, rows = p.value < 0.05)) %>%
+     tab_row_group(label = 'Cerebellum', rows = 1:4) %>%
+    tab_row_group(label = 'Diencephalon', rows = 5:8) %>%
+    tab_row_group(label = 'Medulla Oblongata', rows = 9:12) %>%
+    tab_row_group(label = 'Mesencephalon', rows = 13:16) %>%
+    tab_row_group(label = 'Telencephalon', rows = 17:20)
+  
+
+mergedtable_shape_fancy
+
+```
+
+PGLS of regional brain size and foraging mode RESULTS: Affects on all regions except the mesencephalon  
+```{r message=FALSE, warning=FALSE}
+pgls_csize <- procD.pgls(prop$c ~ foraging_mode, phy = lzrd_tree, data=c.gdf, iter=999, print.progress = FALSE)
+pgls_dsize <- procD.pgls(prop$d ~ foraging_mode, phy = lzrd_tree, data=d.gdf, iter=999, print.progress = FALSE)
+pgls_mdsize <- procD.pgls(prop$md ~ foraging_mode, phy = lzrd_tree, data=md.gdf, iter=999, print.progress = FALSE)
+pgls_mssize <- procD.pgls(prop$ms ~ foraging_mode, phy = lzrd_tree, data=ms.gdf, iter=999, print.progress = FALSE)
+pgls_tsize <- procD.pgls(prop$t ~ foraging_mode, phy = lzrd_tree, data=t.gdf, iter=999, print.progress = FALSE)
+
+```
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+library(gt)
+t1 <- broom::tidy(pgls_csize$aov.table)
+t2 <- broom::tidy(pgls_dsize$aov.table)
+t3 <- broom::tidy(pgls_mdsize$aov.table)
+t4 <- broom::tidy(pgls_mssize$aov.table)
+t5 <- broom::tidy(pgls_tsize$aov.table)
+
+mergedtable_size <- rbind(t1, t2, t3, t4, t5)
+
+mergedtable_size_fancy <- gt(mergedtable_size) %>%
+    tab_header(title = md("Regional Brain Size")) %>%
+    cols_label(term = 'Source', statistic = 'F', p.value = 'p-value') %>%
+    fmt_number(columns = c('SS', 'MS'), decimals = 4) %>%
+    fmt_number(columns = c('statistic', 'Z'), decimals = 2) %>%
+    fmt_number(columns = c('Rsq', 'p.value'), decimals = 3) %>%
+    fmt_missing(columns = 2:8, missing_text = " ") %>% 
+    tab_footnote(footnote = "df, degree of freedom.", locations = cells_column_labels(columns = df)) %>%
+    tab_footnote(footnote = "SS, sum of squares.", locations = cells_column_labels(columns = SS)) %>%
+    tab_footnote(footnote = "MS, mean squares.", locations = cells_column_labels(columns = MS)) %>%
+    tab_footnote(footnote = "Significant values (p-value < 0.05) from permutation tests (1,000 permutation rounds) are bolded.",locations = cells_column_labels(columns = p.value)) %>%
+    tab_style(style = list(cell_text(weight = "bold")), 
+              locations = cells_body(columns = p.value, rows = p.value < 0.05)) %>%
+     tab_row_group(label = 'Cerebellum', rows = 1:3) %>%
+    tab_row_group(label = 'Diencephalon', rows = 4:6) %>%
+    tab_row_group(label = 'Medulla Oblongata', rows = 7:9) %>%
+    tab_row_group(label = 'Mesencephalon', rows = 10:12) %>%
+    tab_row_group(label = 'Telencephalon', rows = 13:15)
+  
+
+mergedtable_size_fancy
+
+```
+
+
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+
+ggplot(prop, aes(x = t, y = foraging_mode, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE, jittered_points = T, position = 'points_jitter', scale = 0.8, alpha = 0.5) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1, alpha = 1) + xlab('Telencephalon Csize Ratio') +
+  ylab('Foraging Mode') + 
+  scale_y_discrete(labels = c('sit_and_wait' = 'Sit & Wait', 'mixed' = 'Mixed', 'active_foraging' = 'Active')) +
+  theme_classic()
+
+
+ggplot(prop, aes(x = d, y = foraging_mode, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE, jittered_points = T, position = 'points_jitter', scale = 0.8, alpha = 0.5) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1, alpha = 1) + xlab('Diencephalon Csize Ratio') +
+  ylab('Foraging Mode') + 
+  scale_y_discrete(labels = c('sit_and_wait' = 'Sit & Wait', 'mixed' = 'Mixed', 'active_foraging' = 'Active')) +
+  theme_classic()
+
+ggplot(prop, aes(x = md, y = foraging_mode, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE, jittered_points = T, position = 'points_jitter', scale = 0.8, alpha = 0.5) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1, alpha = 1) + xlab('Medulla Oblongata Csize Ratio') +
+  ylab('Foraging Mode') + 
+  scale_y_discrete(labels = c('sit_and_wait' = 'Sit & Wait', 'mixed' = 'Mixed', 'active_foraging' = 'Active')) +
+  theme_classic()
+
+ggplot(prop, aes(x = ms, y = foraging_mode, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE, jittered_points = T, position = 'points_jitter', scale = 0.8, alpha = 0.5) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1, alpha = 1) + xlab('Mesencephalon Csize Ratio') +
+  ylab('Foraging Mode') + 
+  scale_y_discrete(labels = c('sit_and_wait' = 'Sit & Wait', 'mixed' = 'Mixed', 'active_foraging' = 'Active')) +
+  theme_classic()
+
+ggplot(prop, aes(x = c, y = foraging_mode, fill = 0.5 - abs(0.5-stat(ecdf)))) +
+  stat_density_ridges(geom = "density_ridges_gradient", calc_ecdf = TRUE, jittered_points = T, position = 'points_jitter', scale = 0.8, alpha = 0.5) +
+  scale_fill_viridis_c(name = "Tail probability", direction = -1, alpha = 1) + xlab('Cerebellum Csize Ratio') +
+  ylab('Foraging Mode') + 
+  scale_y_discrete(labels = c('sit_and_wait' = 'Sit & Wait', 'mixed' = 'Mixed', 'active_foraging' = 'Active')) +
+  theme_classic()
+```
+
+
+### **Supplementary Material**
+
+**Correlation matrix** between continuous trait variables - included in manuscript
+```{r message=FALSE, warning=FALSE, echo=FALSE}
+library(Hmisc)
+library(corrplot)
+
+corrmatrix <- rcorr(as.matrix(trait[,c("maxSVL", "precip_seasonality", "temp_seasonality")]))
+
+mydata.cor <- cor(cbind(wb.gpa$Csize, (trait[,c("latitude", "maxSVL", "precip_seasonality", "temp_seasonality")])), 
+                  method = c('pearson'))
+
+
+
+testRes <- cor.mtest(cbind(wb.gpa$Csize, (trait[,c("latitude", "maxSVL", "precip_seasonality", "temp_seasonality")])), conf.level = 0.95)
+
+library(RColorBrewer)
+
+corrplot(mydata.cor, p.mat = testRes$p, method = 'circle', type = 'lower', 
+         addCoef.col ='black', number.cex = 0.8, order = 'AOE', 
+         diag=FALSE, 
+         col=colorRampPalette(c("darkgoldenrod2", "white", "darkcyan"))(100), 
+         tl.srt = 45,
+         tl.col = 'black')
+```
+
+**1. Phylogentic Signal**
+```{r message=FALSE, warning=FALSE}
+
+physignal(wb.gpa$coords, lzrd_tree)
+physignal(wb.gpa$Csize, lzrd_tree)
+
+```
+
+**2. Allometry of CSize and Shape** - the results are in our shape pgls because we control for size 
+```{r warning=FALSE, message=FALSE}
+pgls_allom <- procD.pgls(coords ~ Csize, phy = lzrd_tree, data=wb.gdf, iter=999,
+                    print.progress = FALSE)
+```
+
+```{r warning=FALSE, message=FALSE, echo=FALSE}
+t3 <- broom::tidy(pgls_allom$aov.table)
+
+
+t3fancy <- gt(t3) %>%
+    tab_header(title = md("Allometry")) %>%
+    cols_label(term = 'Source', statistic = 'F', p.value = 'p-value') %>%
+    fmt_number(columns = c('SS', 'MS'), decimals = 4) %>%
+    fmt_number(columns = c('statistic', 'Z'), decimals = 2) %>%
+    fmt_number(columns = c('Rsq', 'p.value'), decimals = 3) %>%
+    fmt_missing(columns = 2:8, missing_text = " ") %>% 
+    tab_footnote(footnote = "df, degree of freedom.", locations = cells_column_labels(columns = df)) %>%
+    tab_footnote(footnote = "SS, sum of squares.", locations = cells_column_labels(columns = SS)) %>%
+    tab_footnote(footnote = "MS, mean squares.", locations = cells_column_labels(columns = MS)) %>%
+    tab_footnote(footnote = "Significant values (p-value < 0.05) from permutation tests (1,000 permutation rounds) are bolded.",locations = cells_column_labels(columns = p.value)) %>%
+    tab_style(style = list(cell_text(weight = "bold")), 
+              locations = cells_body(columns = p.value, rows = p.value < 0.05))
+t3fancy
+```
+

@@ -1,0 +1,355 @@
+---
+title: "wireframes"
+author: "Lauren E Johnson"
+date: "11/22/2021"
+output: html_document
+---
+
+```{r, setup, echo = FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# setting up hook to save rgl files
+library(rgl)
+knitr::knit_hooks$set(webgl = hook_webgl)
+```
+
+```{r echo=FALSE, include=FALSE, message = FALSE, warning = FALSE, results='hide'}
+library(rgl)
+setupKnitr(autoprint = TRUE)
+
+
+# for some reason having this plot first allows the brain plots to actually show up in the document. Not sure why, but going to keep this code in for now until I figure it out. 
+xyz <- matrix(rnorm(27), ncol = 3)
+triangles3d(xyz, col = rainbow(9))
+spheres3d(xyz, col = rainbow(9), radius = 0.1)
+```
+
+
+```{r, test, webgl=TRUE, echo = FALSE, message=FALSE, warning=FALSE, results='hide'}
+library(geomorph)
+
+load(here::here('data/whole_brain_coords_S1.Rda'))
+load(here::here('data/wholebrain_links.Rda'))
+
+# GPA to get procrustes coordinates
+wholebrain_gpa <- gpagen(wholebrain)
+
+# PCA on procrustes coordinates
+wholebrain_pca <- gm.prcomp(wholebrain_gpa$coords)
+
+
+
+#rgl.snapshot('3dplot.png', fmt = 'png')
+
+
+```
+
+
+**Minimum PC1**
+```{r, webgl = TRUE, echo = FALSE, message=FALSE, warning=FALSE}
+# plotting the minimum and maximum specimen shape for PC1
+
+plotRefToTarget(M1=wholebrain_pca$shapes$shapes.comp1$min, M2 = wholebrain_pca$shapes$shapes.comp1$min, method = 'points',mag = .5, links = wholebrain_links, axes = T, gridPar = gridPar(pt.size = 1))
+
+```
+
+**Maximum PC1**
+```{r, max, webgl = TRUE, echo = FALSE, message=FALSE, warning=FALSE}
+
+plotRefToTarget(M1=wholebrain_pca$shapes$shapes.comp1$max, M2 = wholebrain_pca$shapes$shapes.comp1$max, method = 'points',mag = .5, links = wholebrain_links, axes = T, gridPar = gridPar(pt.size = 1))
+
+```
+
+
+
+**Minimum PC2**
+```{r, webgl = TRUE, echo = FALSE, message=FALSE, warning=FALSE}
+# plotting the minimum and maximum specimen shape for PC1
+
+plotRefToTarget(M1=wholebrain_pca$shapes$shapes.comp2$min, M2 = wholebrain_pca$shapes$shapes.comp2$min, method = 'points',mag = .5, links = wholebrain_links, axes = T, gridPar = gridPar(pt.size = 1))
+
+```
+
+**Maximum PC2**
+```{r, webgl = TRUE, echo = FALSE, message=FALSE, warning=FALSE}
+
+plotRefToTarget(M1=wholebrain_pca$shapes$shapes.comp2$max, M2 = wholebrain_pca$shapes$shapes.comp2$max, method = 'points',mag = .5, links = wholebrain_links, axes = T, gridPar = gridPar(pt.size = 1))
+
+```
+
+-----
+Now trying different color palettes and comparing reference to target
+
+Purple color palette - not as much a fan
+**Maximum PC1**
+```{r, webgl = TRUE, echo = FALSE, message=FALSE, warning=FALSE}
+
+#M1 = reference
+#M2 = target 
+# pt.bg, link.col, pt.size = reference
+# tar.pt.bg, tar.link.col, tar.pt.size = target
+
+plotRefToTarget(M1= mshape(wholebrain_pca$shapes$shapes.comp1), 
+                M2 = wholebrain_pca$shapes$shapes.comp1$max, 
+                method = 'points',
+                mag = .5, 
+                links = wholebrain_links, 
+                axes = T, 
+                gridPar = gridPar(pt.bg = "thistle4",
+                                  link.col = "thistle4",
+                                  pt.size = 1, 
+                                  tar.pt.bg = "mediumorchid4",
+                                  tar.link.col = "mediumorchid4",
+                                  tar.pt.size = 1))
+
+
+```
+
+Pink color palette - for now, I think this one is good  
+Light pink = reference shape (average of all PC shapes)  
+Dark pink = target shape (Maximum or Minimum PC)  
+**Maximum PC1**
+```{r, webgl = TRUE, echo = FALSE, message=FALSE, warning=FALSE}
+
+#M1 = reference
+#M2 = target 
+# pt.bg, link.col, pt.size = reference
+# tar.pt.bg, tar.link.col, tar.pt.size = target
+
+plotRefToTarget(M1= mshape(wholebrain_pca$shapes$shapes.comp1), 
+                M2 = wholebrain_pca$shapes$shapes.comp1$max, 
+                method = 'points',
+                mag = .5, 
+                links = wholebrain_links, 
+                axes = F, 
+                gridPar = gridPar(pt.bg = "mistyrose3",
+                                  link.col = "mistyrose3",
+                                  pt.size = 1, 
+                                  tar.pt.bg = "palevioletred4",
+                                  tar.link.col = "palevioletred4",
+                                  tar.pt.size = 0.75))
+
+
+```
+
+**Minimum PC1**
+```{r, webgl = TRUE, echo = FALSE, message=FALSE, warning=FALSE}
+
+#M1 = reference
+#M2 = target 
+# pt.bg, link.col, pt.size = reference
+# tar.pt.bg, tar.link.col, tar.pt.size = target
+
+plotRefToTarget(M1= mshape(wholebrain_pca$shapes$shapes.comp1), 
+                M2 = wholebrain_pca$shapes$shapes.comp1$min, 
+                method = 'points',
+                mag = .5, 
+                links = wholebrain_links, 
+                axes = F, 
+                gridPar = gridPar(pt.bg = "mistyrose3",
+                                  link.col = "mistyrose3",
+                                  pt.size = 1, 
+                                  tar.pt.bg = "palevioletred4",
+                                  tar.link.col = "palevioletred4",
+                                  tar.pt.size = 0.75))
+
+
+```
+
+
+**Maximum PC2**
+```{r, webgl = TRUE, echo = FALSE, message=FALSE, warning=FALSE}
+
+#M1 = reference
+#M2 = target 
+# pt.bg, link.col, pt.size = reference
+# tar.pt.bg, tar.link.col, tar.pt.size = target
+
+plotRefToTarget(M1= mshape(wholebrain_pca$shapes$shapes.comp2), 
+                M2 = wholebrain_pca$shapes$shapes.comp2$max, 
+                method = 'points',
+                mag = .5, 
+                links = wholebrain_links, 
+                axes = F, 
+                gridPar = gridPar(pt.bg = "mistyrose3",
+                                  link.col = "mistyrose3",
+                                  pt.size = 1, 
+                                  tar.pt.bg = "palevioletred4",
+                                  tar.link.col = "palevioletred4",
+                                  tar.pt.size = 0.75))
+
+
+```
+
+**Minimum PC2**
+```{r, webgl = TRUE, echo = FALSE, message=FALSE, warning=FALSE}
+
+#M1 = reference
+#M2 = target 
+# pt.bg, link.col, pt.size = reference
+# tar.pt.bg, tar.link.col, tar.pt.size = target
+
+plotRefToTarget(M1= mshape(wholebrain_pca$shapes$shapes.comp2), 
+                M2 = wholebrain_pca$shapes$shapes.comp2$min, 
+                method = 'points',
+                mag = .5, 
+                links = wholebrain_links, 
+                axes = F, 
+                gridPar = gridPar(pt.bg = "mistyrose3",
+                                  link.col = "mistyrose3",
+                                  pt.size = 1, 
+                                  tar.pt.bg = "palevioletred4",
+                                  tar.link.col = "palevioletred4",
+                                  tar.pt.size = 0.75))
+
+
+```
+
+
+
+
+
+
+
+
+
+
+**Maximum PC3**
+```{r, webgl = TRUE, echo = FALSE, message=FALSE, warning=FALSE}
+
+#M1 = reference
+#M2 = target 
+# pt.bg, link.col, pt.size = reference
+# tar.pt.bg, tar.link.col, tar.pt.size = target
+
+plotRefToTarget(M1= mshape(wholebrain_pca$shapes$shapes.comp3), 
+                M2 = wholebrain_pca$shapes$shapes.comp3$max, 
+                method = 'points',
+                mag = .5, 
+                links = wholebrain_links, 
+                axes = F, 
+                gridPar = gridPar(pt.bg = "mistyrose3",
+                                  link.col = "mistyrose3",
+                                  pt.size = 1, 
+                                  tar.pt.bg = "palevioletred4",
+                                  tar.link.col = "palevioletred4",
+                                  tar.pt.size = 0.75))
+
+
+```
+
+**Minimum PC3**
+```{r, webgl = TRUE, echo = FALSE, message=FALSE, warning=FALSE}
+
+#M1 = reference
+#M2 = target 
+# pt.bg, link.col, pt.size = reference
+# tar.pt.bg, tar.link.col, tar.pt.size = target
+
+plotRefToTarget(M1= mshape(wholebrain_pca$shapes$shapes.comp3), 
+                M2 = wholebrain_pca$shapes$shapes.comp3$min, 
+                method = 'points',
+                mag = .5, 
+                links = wholebrain_links, 
+                axes = F, 
+                gridPar = gridPar(pt.bg = "mistyrose3",
+                                  link.col = "mistyrose3",
+                                  pt.size = 1, 
+                                  tar.pt.bg = "palevioletred4",
+                                  tar.link.col = "palevioletred4",
+                                  tar.pt.size = 0.75))
+
+
+```
+
+
+
+
+**Minimum PC3 vs Maximum PC3 and Min PC4 vs Max PC4**
+```{r, webgl = TRUE, echo = FALSE, message=FALSE, warning=FALSE}
+
+#M1 = reference
+#M2 = target 
+# pt.bg, link.col, pt.size = reference
+# tar.pt.bg, tar.link.col, tar.pt.size = target
+
+plotRefToTarget(M1= wholebrain_pca$shapes$shapes.comp3$min, 
+                M2 = wholebrain_pca$shapes$shapes.comp3$max, 
+                method = 'points',
+                mag = .5, 
+                links = wholebrain_links, 
+                axes = F, 
+                gridPar = gridPar(pt.bg = "mistyrose3",
+                                  link.col = "mistyrose3",
+                                  pt.size = 1, 
+                                  tar.pt.bg = "palevioletred4",
+                                  tar.link.col = "palevioletred4",
+                                  tar.pt.size = 0.75))
+# min = light pink
+# max = dark pink
+
+plotRefToTarget(M1= wholebrain_pca$shapes$shapes.comp4$min, 
+                M2 = wholebrain_pca$shapes$shapes.comp4$max, 
+                method = 'points',
+                mag = .5, 
+                links = wholebrain_links, 
+                axes = F, 
+                gridPar = gridPar(pt.bg = "mistyrose3",
+                                  link.col = "mistyrose3",
+                                  pt.size = 1, 
+                                  tar.pt.bg = "palevioletred4",
+                                  tar.link.col = "palevioletred4",
+                                  tar.pt.size = 0.75))
+```
+
+**Maximum PC4**
+```{r, webgl = TRUE, echo = FALSE, message=FALSE, warning=FALSE}
+
+#M1 = reference
+#M2 = target 
+# pt.bg, link.col, pt.size = reference
+# tar.pt.bg, tar.link.col, tar.pt.size = target
+
+plotRefToTarget(M1= mshape(wholebrain_pca$shapes$shapes.comp4), 
+                M2 = wholebrain_pca$shapes$shapes.comp4$max, 
+                method = 'points',
+                mag = .5, 
+                links = wholebrain_links, 
+                axes = F, 
+                gridPar = gridPar(pt.bg = "mistyrose3",
+                                  link.col = "mistyrose3",
+                                  pt.size = 1, 
+                                  tar.pt.bg = "palevioletred4",
+                                  tar.link.col = "palevioletred4",
+                                  tar.pt.size = 0.75))
+
+
+```
+
+**Minimum PC4**
+```{r, webgl = TRUE, echo = FALSE, message=FALSE, warning=FALSE}
+
+#M1 = reference
+#M2 = target 
+# pt.bg, link.col, pt.size = reference
+# tar.pt.bg, tar.link.col, tar.pt.size = target
+
+plotRefToTarget(M1= mshape(wholebrain_pca$shapes$shapes.comp4), 
+                M2 = wholebrain_pca$shapes$shapes.comp4$min, 
+                method = 'points',
+                mag = .5, 
+                links = wholebrain_links, 
+                axes = F, 
+                gridPar = gridPar(pt.bg = "mistyrose3",
+                                  link.col = "mistyrose3",
+                                  pt.size = 1, 
+                                  tar.pt.bg = "palevioletred4",
+                                  tar.link.col = "palevioletred4",
+                                  tar.pt.size = 0.75))
+
+
+```
+
+
+export image rgl.snapshot('3dplot.png', fmt = 'png')
+If error appear just change window from full screen to smaller screen and it will then work

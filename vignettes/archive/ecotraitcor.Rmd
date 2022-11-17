@@ -1,0 +1,86 @@
+---
+title: "Ecological Trait Correlations"
+author: "Lauren E Johnson"
+date: "12/2/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+load(here::here('data/lizard_trait_data.Rda'))
+```
+
+```{r}
+library(ggpubr)
+library(ggplot2)
+
+abslat <- trait
+abslat$latitude <- abs(abslat$latitude)
+
+ggboxplot(abslat, x = 'reproductive_mode', y = 'latitude',
+          color = 'reproductive_mode', palette = 'jco',
+          add = 'jitter') + 
+  stat_compare_means(method = 't.test')
+
+
+ggboxplot(abslat, x = 'foraging_mode', y = 'latitude',
+          color = 'foraging_mode', palette = 'jco',
+          add = 'jitter') + 
+  stat_compare_means(method = 'anova')
+
+ggboxplot(abslat, x = 'activity_time', y = 'latitude',
+          color = 'activity_time', palette = 'jco',
+          add = 'jitter') + 
+  stat_compare_means(method = 'anova')
+
+
+
+# latitude and size
+ggscatter(data = abslat, x = "latitude", y = "maxSVL", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson")
+
+ggscatter(data = abslat, x = "latitude", y = "fSVL", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson")
+
+ggscatter(data = abslat, x = "latitude", y = "hatchlingSVL", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson")
+
+# temp seasonality and size
+ggscatter(data = abslat, x = "temp_seasonality", y = "maxSVL", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson")
+
+ggscatter(data = abslat, x = "temp_seasonality", y = "fSVL", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson")
+ggscatter(data = abslat, x = "temp_seasonality", y = "hatchlingSVL", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson")
+
+# latitude/seasonality and clutch size
+ggscatter(data = abslat, x = "temp_seasonality", y = "clutch_size", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson")
+
+ggscatter(data = abslat, x = "latitude", y = "clutch_size", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson")
+
+# do larger lizards have bigger clutches?
+
+ggscatter(data = abslat, x = "fSVL", y = "clutch_size", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson")
+
+ggscatter(data = abslat, x = "hatchlingSVL", y = "clutch_size", 
+          add = "reg.line", conf.int = TRUE, 
+          cor.coef = TRUE, cor.method = "pearson")
+```
+
+Conclusions: there are larger lizards in more seasonality and poleward latitudes. However, these larger lizards are not having larger clutch sizes, which also explains why there is not relationshp with clutch size and latitude/seasonlity. Also, there is not relatioshp between hatchling size and clutch size. 
