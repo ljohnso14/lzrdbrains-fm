@@ -225,3 +225,4 @@ make_brain <- function(data = 'whole_brain_coords_S1.csv'){
 
 # Medulla oblongota
 # 9, 18, 29, 45:47, 56:57, 60
+

@@ -1,5 +1,5 @@
 ---
-title: "wireframes"
+title: "Wireframes"
 author: "Lauren E Johnson"
 date: "11/22/2021"
 output: html_document
