@@ -23,7 +23,7 @@ Phelsuma_grandis,gekkonidae,Madagascar,-14.02,49.37,yes,118,97,31.5,arboreal,Diu
 Plestiodon_marginatus,scincidae,Oriental,27.34,128.58,yes,100,72.3,NA,terrestrial,Diurnal,Terrestrial,Terrestrial,active_foraging,Oviparous,NA,NT,decreasing,NA,NA
 Pogona_vitticeps,agamidae,Australia,-28.05,140.18,no,250,152.6,40,terrestrial,Diurnal,Arboreal_Saxicolous,Scansorial,sit_and_wait,Oviparous,20.75,LC,unknown,43,5792.7
 Pseudopus_apodus,anguidae,Palearctic,39.24,45.47,no,580,389.8,82.5,terrestrial,Diurnal,Terrestrial,Terrestrial,active_foraging,Oviparous,8.65,NE,NE,56.7,8154.6
-Rieppeleon_brevicaudatus,chamaeleonidae,Afrotropic,-7.31,37.95,no,75,57.6,NA,arboreal,Diurnal,Arboreal_Terrestrial,Scansorial,na,Oviparous,5,LC,unknown,78.7,1311
+Rieppeleon_brevicaudatus,chamaeleonidae,Afrotropic,-7.31,37.95,no,75,57.6,NA,arboreal,Diurnal,Arboreal_Terrestrial,Scansorial,NA,Oviparous,5,LC,unknown,78.7,1311
 Takydromus_sexlineatus,lacertidae,Oriental,13.91,104.95,no,70,55.8,19,semi_arboreal,Diurnal,Arboreal_Terrestrial,Scansorial,active_foraging,Oviparous,2.2,LC,unknown,64.1,2460.9
 Teratoscincus_scincus,gekkonidae,Palearctic,41.85,63.76,no,120,77.2,39.5,terrestrial,Nocturnal,Terrestrial,Terrestrial,sit_and_wait,Oviparous,2,LC,stable,56.5,10869.5
 Trioceros_jacksonii,chamaeleonidae,Afrotropic,-1,37.15,no,167,107.3,28.5,arboreal,Diurnal,Arboreal,Scansorial,sit_and_wait,Viviparous,16.95,LC,stable,78.6,964.9

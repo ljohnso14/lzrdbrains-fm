@@ -53,14 +53,14 @@ wb.gdf <- geomorph.data.frame(wb.gpa, trait)
 note: we included Csize as a covariate since shape often covaries with size. Refer to supplementary information for how much shape variation is explained by size. 
 ```{r message=FALSE, warning=FALSE}
 
-pgls_wb.shape <- procD.pgls(coords ~ Csize + abslatitude + precip_seasonality + temp_seasonality + microhabitat + activity_time + foraging_mode, phy = lzrd_tree, SS.type = "II", data = wb.gdf, print.progress = F)
+pgls_wb.shape <- procD.pgls(coords ~ Csize + abslatitude + precip_seasonality + temp_seasonality + microhabitat + activity_time + foraging_mode, phy = lzrd_tree, SS.type = "III", data = wb.gdf, print.progress = F)
 
 ```
 
 **Whole Brain Size:**    
 ```{r message=FALSE, warning=FALSE}
 
-pgls_wb.size <- procD.pgls(Csize ~ abslatitude + precip_seasonality + temp_seasonality + microhabitat + activity_time + foraging_mode, phy = lzrd_tree, SS.type = "II", data = wb.gdf, print.progress = F) 
+pgls_wb.size <- procD.pgls(Csize ~ abslatitude + precip_seasonality + temp_seasonality + microhabitat + activity_time + foraging_mode, phy = lzrd_tree, SS.type = "III", data = wb.gdf, print.progress = F) 
 
 ```
 
