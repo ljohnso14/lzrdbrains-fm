@@ -3,7 +3,7 @@ Ablepharus_kitaibelii,scincidae,Palearctic,41.11,25.77,no,58,43.4,20,facultative
 Acontias_meleagris,scincidae,Afrotropic,-33.26,21.77,no,295,162.4,79,burrower,Cathemeral,Fossorial,Fossorial,active_foraging,Viviparous,3,LC,stable,37,3950.5
 Agama_agama,agamidae,Afrotropic,6.77,15.61,no,150,89.8,31,terrestrial,Diurnal,Arboreal_Saxicolous,Scansorial,sit_and_wait,Oviparous,8.8,LC,stable,90.4,1719.9
 Amphisbaena_scutigerum,amphisbaenidae,Neotropic,-22.79,-43.04,no,500,NA,NA,burrower,Cathemeral,Fossorial,Fossorial,active_foraging,Oviparous,NA,DD,unknown,NA,NA
-Anguis_fragilis,anguidae,Palearctic,50.08,8.1,no,291,176.5,47,facultative_burrower,Diurnal,Cryptic,Terrestrial,active_foraging,Viviparous,9.48,LC,stable,24.3,6158.11
+Anguis_fragilis,anguidae,Palearctic,50.08,8.1,no,291,176.5,47,facultative_burrower,Diurnal,Cryptic,Fossorial,active_foraging,Viviparous,9.48,LC,stable,24.3,6158.11
 Bachia_flavescens,gymnophthalmidae,Neotropic,0.37,-60.46,no,80,67.5,32,facultative_burrower,Diurnal,Fossorial_Terrestrial,Fossorial,active_foraging,Oviparous,1,LC,unknown,49.7,615.7
 Basiliscus_vittatus,corytophanidae,Neotropic,16.83,-91.18,no,225,117.8,37.5,aerial_semiarboreal,Diurnal,Semi_Aquatic,Scansorial,sit_and_wait,Oviparous,5.4,LC,stable,70.9,1480.3
 Blanus_cinereus,blanidae,Palearctic,39.42,-4.57,no,254,159,78,burrower,Cathemeral,Fossorial,Fossorial,active_foraging,Oviparous,2,LC,stable,45.6,6133

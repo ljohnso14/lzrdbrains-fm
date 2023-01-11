@@ -179,10 +179,14 @@ kable(summary(wb.pca))
 
 ```{r message=FALSE, warning=FALSE, echo=FALSE}
 plot(wb.pca, phylo = TRUE, main = "Phylo PCA")
-
 #wb.pca$x #pc score
 
 plot(wb.pca, axis1 = 3, axis2 = 4, phylo = TRUE, main = "Phylo PCA")
+
+
+#pc.plot <- plot(pgls_wb.shape, type = "PC", pch = 19)
+#shapeHulls(pc.plot, groups = wb.gdf$foraging_mode)
+
 
 ```
 
@@ -225,6 +229,8 @@ physignal(wb.gpa$Csize, lzrd_tree)
 ```{r warning=FALSE, message=FALSE}
 pgls_allom <- procD.pgls(coords ~ Csize, phy = lzrd_tree, data=wb.gdf, iter=999,
                     print.progress = FALSE)
+
+summary(pgls_allom)
 ```
 
 ```{r warning=FALSE, message=FALSE, echo=FALSE}
@@ -247,3 +253,136 @@ t3fancy <- gt(t3) %>%
 t3fancy
 ```
 
+
+
+12/12/2022
+```{r}
+model_selection <- function (model, delta = 2){
+
+  # Model selection
+  AICtable_full <- MuMIn::dredge(model)
+
+  top_models_index <- which(AICtable_full[,'delta'] <= delta)
+  AICtable <- AICtable_full[top_models_index,]
+
+  model_list <-MuMIn::get.models(AICtable, subset = delta <= delta)
+
+  final_model_index <- which.max(unlist(lapply(lapply(model_list, coefficients), length)))
+
+  final_model <- model_list[[final_model_index]]
+
+  return(list(AIC_table = AICtable,
+              final_model = final_model))
+}
+
+```
+
+Shape models
+```{r}
+library(geomorph)
+full.model <- procD.pgls(coords ~ Csize + 
+                              abslatitude + 
+                              precip_seasonality + 
+                              temp_seasonality + 
+                              microhabitat + 
+                              activity_time + 
+                              foraging_mode, 
+                            phy = lzrd_tree, SS.type = "III", data = wb.gdf, print.progress = F)
+
+climate.model <- procD.pgls(coords ~ Csize + 
+                              abslatitude + 
+                              precip_seasonality + 
+                              temp_seasonality, 
+                            phy = lzrd_tree, SS.type = "III", data = wb.gdf, print.progress = F)
+
+ecology.model <- procD.pgls(coords ~ Csize + 
+                              microhabitat + 
+                              activity_time + 
+                              foraging_mode, 
+                            phy = lzrd_tree, SS.type = "III", data = wb.gdf, print.progress = F)
+
+ecology.lat.model <- procD.pgls(coords ~ Csize + 
+                              abslatitude + 
+                              microhabitat + 
+                              activity_time + 
+                              foraging_mode, 
+                            phy = lzrd_tree, SS.type = "III", data = wb.gdf, print.progress = F)
+
+fm.micro.hab.model <- procD.pgls(coords ~ Csize +
+                              microhabitat + 
+                              foraging_mode, 
+                            phy = lzrd_tree, SS.type = "III", data = wb.gdf, print.progress = F)
+
+fm.hab.mod.model <- procD.pgls(coords ~ Csize +
+                              habitat_modes + 
+                              foraging_mode, 
+                            phy = lzrd_tree, SS.type = "III", data = wb.gdf, print.progress = F)
+
+models_shape <- model.comparison(full.model, climate.model, ecology.model, type = "logLik")
+
+knitr::kable(models_shape$table)
+
+#fm.hab.model had the lowest AIC, so we will select that model for summary
+
+
+summary(fm.micro.hab.model)
+summary(ecology.model)
+
+```
+
+
+
+Size models
+```{r}
+library(geomorph)
+full.model <- procD.pgls(Csize ~ 
+                              abslatitude + 
+                              precip_seasonality + 
+                              temp_seasonality + 
+                              microhabitat + 
+                              activity_time + 
+                              foraging_mode, 
+                            phy = lzrd_tree, SS.type = "III", data = wb.gdf, print.progress = F)
+
+climate.model <- procD.pgls(Csize ~ 
+                              abslatitude + 
+                              precip_seasonality + 
+                              temp_seasonality, 
+                            phy = lzrd_tree, SS.type = "III", data = wb.gdf, print.progress = F)
+
+ecology.model <- procD.pgls(Csize ~ 
+                              microhabitat + 
+                              activity_time + 
+                              foraging_mode, 
+                            phy = lzrd_tree, SS.type = "III", data = wb.gdf, print.progress = F)
+
+ecology.lat.model <- procD.pgls(Csize ~ 
+                              abslatitude + 
+                              microhabitat + 
+                              activity_time + 
+                              foraging_mode, 
+                            phy = lzrd_tree, SS.type = "III", data = wb.gdf, print.progress = F)
+
+fm.micro.hab.model <- procD.pgls(Csize ~
+                              microhabitat + 
+                              foraging_mode, 
+                            phy = lzrd_tree, SS.type = "III", data = wb.gdf, print.progress = F)
+
+fm.hab.mod.model <- procD.pgls(Csize ~
+                              habitat_modes + 
+                              foraging_mode, 
+                            phy = lzrd_tree, SS.type = "III", data = wb.gdf, print.progress = F)
+
+models_size <- model.comparison(full.model, climate.model, ecology.model, type = "logLik")
+
+knitr::kable(models_size$table)
+
+#fm.hab.model had the lowest AIC, so we will select that model for summary
+
+
+summary(full.model)
+summary(ecology.model)
+
+library(qpcR)
+
+```
